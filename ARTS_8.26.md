@@ -1,4 +1,4 @@
-##Algorithm
+## Algorithm
 * 55 Jump Game
 	* Description
 	
