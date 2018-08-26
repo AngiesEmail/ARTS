@@ -133,6 +133,26 @@
 		双层循环，消除递归
 		自右向左，减少栈消耗
 		```
+	* 另一种解题方法
+
+		```
+		class Solution(object):
+		    def canJump(self, nums):
+		        """
+		        :type nums: List[int]
+		        :rtype: bool
+		        """
+		        curStep = nums[0]
+		        for x in xrange(1,len(nums)):
+		            if x > curStep:
+		                return False
+		            if x + nums[x] > curStep:
+		                curStep = x + nums[x]
+		            if curStep >= len(nums)-1:
+		                return True
+		            
+		        return curStep >= len(nums)-1
+		```
 
 ## Share
 [Cinemachine](https://github.com/AngiesEmail/ARTS/blob/master/Cinemachine.md)
