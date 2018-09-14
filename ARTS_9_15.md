@@ -26,3 +26,5 @@ To invert an image means that each ``0`` is replaced by ``1``,and each ``1`` is 
 	* 误区：
 		* list.reverse() 翻转没有返回值，会反转原有列表
 		* 1与0的替换，一开始用~(按位取反)做，是不正确的
+* 其他的解决方案：
+	* row[~i] = row[-i-1] = row[len(row) - 1 - i]
