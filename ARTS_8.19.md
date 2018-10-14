@@ -1,6 +1,6 @@
 # ARTS
 ## Algorithm
-* [709.To Lower Case](Algorithm/709.To Lower Case.md)		
+* [709.To Lower Case](Algorithm/709.ToLowerCase.md)		
 
 ## Tip
 

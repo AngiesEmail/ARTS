@@ -1,5 +1,5 @@
 ## Algorithm
-* [771.Jewels and Stones](Algorithm/771.Jewels and Stones.md)
+* [771.Jewels and Stones](Algorithm/771.JewelsAndStones.md)
 
 	
 ## Share
