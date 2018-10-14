@@ -1,56 +1,6 @@
 ## Algorithm
-### Jewels and Stones
-* Description		
-	* J = "aA"  S = "aAAbbbbb"
+* [771.Jewels and Stones](Algorithm/771.Jewels and Stones.md)
 
-	You're given strings ``J`` representing the types of stones that are jewels,and ``S``representing the stones you have.Each character in ``S`` is  a type of stone you have.You want to know how many of the stones you have also jewels.
-	
-	The letters in ``J`` are guaranteed distinct,and all characters in ``J`` and ``S`` are letters.Letters are case sensitive,so ``"a"`` is considered a different type of stone from ``"A"``.
-	
-		guaranteed 保证
-		distinct 明显的，确切的，清楚的
-	Note:
-	
-	``S`` and ``J`` will consist of letters and have length at most 50
-	
-	The characters in ``J`` are distinct.
-	
-	* solution 1
-	
-		```
-		def numJewelsInStones(J, S):
-		    sDict = {}
-		    for s in S:
-		        if sDict.get(s, None) == None:
-		            sDict[s] = 1
-		        else:
-		            sDict[s] = sDict.get(s) + 1
-		    num = 0
-		    for j in J:
-		        if sDict.get(j,None) != None:
-		            num = num + sDict.get(j)
-		    return num
-		```
-		
-	* solution 2
-			
-		```
-		def numJewelsInStones(J, S):
-		    num = 0
-		    for x in S:
-		        if x in J:
-		            num += 1
-		    return num
-		```
-		
-	* solution 3
-			
-		```
-		def numJewelsInStones(J,S):
-			return sum(s in J for s in S)
-		```
-		
-	* 总结：考察的还是对语言语法的掌握，怎么用最少的代码解决问题
 	
 ## Share
 * 推导式(python)
