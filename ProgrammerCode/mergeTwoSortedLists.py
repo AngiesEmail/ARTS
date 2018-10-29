@@ -24,3 +24,6 @@ def mergeLists(l1,l2):
                 node2 = node2.next
                 result = result.next
     return dummy
+
+l1 = ListNode
+mergeLists
