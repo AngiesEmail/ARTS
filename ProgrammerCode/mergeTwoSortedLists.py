@@ -25,5 +25,4 @@ def mergeLists(l1,l2):
                 result = result.next
     return dummy
 
-l1 = ListNode
 mergeLists
