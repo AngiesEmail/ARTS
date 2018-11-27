@@ -70,6 +70,32 @@
 			* replace 替换-从目标文件夹所有文件被删除并生成新的内容。
 			* append 追加-Data、Libraries和项目根文件夹被清空，并填充新生成的内容。XCode项目文件根据罪行的Unity项目变更进行更新。XCode项目Classes子文件夹被视为安全的地方，可放置自定义的本机代码，但建议定期备份。追加模式仅支持现有的XCode项目，带有有相同的Unity iOS版本生成。
 			* CMD+B： 默认追加模式 
+		* Android 
+			* 生成所有需要的库和序列化资源的应用程序包（.apk文件）
+			* 在实际设备上部署应用程序包
+			* 当第一次尝试建立一个Android项目，Unity会询问查找Android SDK，这需要在设备上安装Android应用程序。可以以后再首选项中更改此设置。
+			* 当编译应用到Android上，确保设备设置USB Debugging和Allow mock locations复选框被选中。
+			* Texture Compression 纹理压缩
+				* 在编译设置，还会发现纹理压缩选项。默认，Unity默认使用ETC1/RGBA16纹理格式。
+				* 如果想生成一个应用程序包（.apk文件）针对一个特定的硬件架构，可以使用纹理压缩来覆盖默认的行为。任何纹理使用纹理格式覆盖将保留格式；仅纹理设置为自动压缩将使用纹理压缩选项中选择的格式。
+				* 确保应用程序部署的设备支持选择的纹理压缩格式，unity将编辑AndroidManifest包含标签匹配所选的特定格式。这将启用Android Market filtering mechanism 过滤机制，仅用于带有相应图形硬件的设备启用应用程序。
+		* Preloading 预加载
+			* 发布的作品将在加载场景时自动预装场景中的所有资源。scene 0是例外，这是因为第一个场景通常是一个启动画面，你要尽可能快地显示它。
+			* 要想确保所有内容完成预加载，可以创建一个空场景调用Application.LoadLevel(1)，在发布设置里让这个空场景的索引为0，这样所有后续关卡将会预加载。
+	* Tutorials 教程
+		* GUI Essentials
+		* Scripting Essentials
+	* Unity3D快捷键 Unity HotKeys
+		* [UnityHotkeys](http://www.ceeger.com/Manual/UnityHotkeys.html)
+		* shift Del 删除
+		* F frame selected选择的帧
+		* ctrl + p play
+		* ctrl + shift + P pause
+		* ctrl + alt + P step 停止
+		* ctrl + shift + N 新建空游戏对象 
+		* ctrl + alt + F Move to view 移动到视图
+		* ctrl + shift + F Align with view 视图对齐
+	* Preferences 首选项
 
 ## 常见问题
 ## 高级
