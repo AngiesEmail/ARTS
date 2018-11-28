@@ -96,6 +96,63 @@
 		* ctrl + alt + F Move to view 移动到视图
 		* ctrl + shift + F Align with view 视图对齐
 	* Preferences 首选项
+		* 可以自定义编辑器的行为
+		* General 
+			* Auto Refresh 自动刷新
+				* 当资源改变时，编辑器自动更新资源
+			* Always Show Project Wizard
+				* 启动时，是否显示项目向导
+			* Compress Assets On Import
+				* 导入时，资源是否自动被压缩
+			* OSX Color Picker OSX 拾色器
+				* 是否用本地OSX拾色器替代Unity
+			* Editor Analytics 编辑器分析
+				* 自动发送信息给Unity
+			* Verify Saving Assets
+				* 退出时，是否需要确认资源是否存储
+			* Skin(Pro) 皮肤
+		* External Tools 外部工具
+			* External Script Editor
+				* 选择使用哪个应用程序打开脚本文件
+			* Editor Attaching 
+				* 是否允许从外部脚本编辑器来调试控制
+			* Image Application 
+				* 使用哪个应用程序打开图片文件
+			* Asset Server Diff Tool
+				* 使用哪个应用程序比较资源服务器的文件异同
+			* Android SDK Location
+				* Android SDK 文件夹位置
+			* iOS Xcode 4.x support 
+				* 启用支持Xcode 4.x为iOS编译目标
+		* Color 
+		* Keys 快捷键
+		* Cache Server 缓存服务器
+			* Use Cache Server 是否启用缓存服务器
+			* IP Address 启用时的，缓存服务器的地址
+* Build Scenes
+	* GameObject
+		* The GameObject-Component Relationship
+		* Using Components
+			* 组件是每个游戏对象的功能零件
+			* 一个游戏对象是许多不同组件的容器
+			* 粒子系统：粒子发射器、粒子动画、粒子渲染器 创建一个运动粒子的群集。
+			* 属性：赋值属性和引用属性
+			* 组件的引用属性可以包含任何类型的组件、游戏对象、资源。
+			* 在运行状态更改的属性，停止运行后，属性回归初始状态。
+		* The Component-Script Relationship
+			* 当创建了一个脚本，并将其附加到一个游戏对象上，脚本将出现在游戏对象的检视视图中。脚本也是一种组件。
+			* 脚本中的属性可以显示在检视面板中，游戏对象会执行脚本的功能。
+		* Deactivating GameObjects 停用游戏对象
+			* 游戏对象名称前的复选框
+			* 脚本调用activeSelf
+			* Effect of deactivating a parent GameObject
+				* 子节点会继承父节点的停用属性。
+				* activeInHierarchy 属性，会基于父对象的状态获取
+				* SetActiveRecursively 但是不会保存子节点的初始状态
+	* Using the Inspector
+		* Editing Value Properties 编辑赋值属性
+		* Assigning References 指定引用
+		* Inspector Options 检视面板选项
 
 ## 常见问题
 ## 高级
