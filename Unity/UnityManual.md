@@ -214,6 +214,59 @@
 				* 调试模式可以在检视视图中查看组件的私有变量，通常它们不会显示。
 				* 打开标签菜单，选择Debug
 				* 调试模式可以检查脚本和其他组件的私有变量。
+	* Using the Scene View 使用场景视图
+		* Scene View Navigation 场景视图导航
+			* 导航控制集
+			* Arrow Movement 方向键移动
+				* 上下->面对自己的向前向后方向
+				* 左右->横向平移
+				* shift 加速
+			* Focusing 聚焦
+				* 选择一个游戏对象，按住F键，场景视图将以所选对象为中心点（即框选）
+			* Orbit、 Move、 Zoom 旋转、移动、缩放
+				* Mouse 鼠标
+					* Orbit:按住Alt键并拖动鼠标将绕当前轴点旋转镜头
+					* Move:按住Alt键和鼠标滚轮并拖动进行镜头平移（实际使用中，无需按下Alt键也可实现效果）
+					* Zoom：按住Alt键并拖动鼠标右键来缩放镜头
+				* 对于两键鼠标或触控板，按住Alt-Control（Alt-Command）并左键将激活移动操作
+				* mac中Control+Alt并左键将激活缩放操作
+				* 鼠标滚轮可以用来缩放视图
+				* Flythrough Mode 漫游模式
+					* 按住鼠标右键；
+					* WASD控制前后左右
+					* QE控制上下移动
+					* shift 加速
+				* Scene Gizmo 场景手柄工具
+					* 显示了场景视图当前视角方向，可以用其来快速修改视角。
+					* 可以点击它的方向杆，更改场景成为该方向的正交模式。
+					* 在正交模式中，可以鼠标右键拖动来旋转，也可Alt+鼠标左键拖动平移
+					* 点击手柄中间的小方框，可退出正交模式
+					* 可以按住shift并点击手柄中间的小方框来切换正交模式
+					* 正交模式：对象不会因为距离远而变小
+					* 透视模式：对象远近会影响大小
+				* Mac 触控板
+					* 可以两指拖拽来缩放视图
+					* 三指来模拟gizmo效果：拖上、左右、下分别激活顶、右、前、透视图
+		* Positioning GameObjects 定位游戏对象
+			* Focusing 聚焦
+				* 选中对象，点击F
+			* Translate Rotate and Scale 移动、旋转、缩放
+				* W 平移 E 旋转 R 缩放
+			* Gizmo Display Toggles 显示切换器
+				* 用来限定TransformGizmo的位置
+				* Position 位置
+					* Center 将在对象范围的中心位置提供Gizmo
+					* Pivot 将在一个网格的实际轴点位置放置Gizmo
+				* Rotation 旋转
+					* Local 将相对于对象保持Gizmo的旋转
+					* Global 将强制Gizmo为世界空间的方向
+			* Unit Snapping 捕捉单位
+				* 当你使用移动工具拖动Gizmo的方向轴时，可以按住Control键（Command），以捕捉在设置中定义的增量（拖动的限制，只能是设置的倍数，只在鼠标移动的情况下生效）
+				* Edit->Snap Settings
+			* Surface Snapping
+				* 使用移动工具在中心拖拽时， 
+		* View Modes 视图模式
+		* Gizmo and Icon Display Controls Gizmo和图标显示控制
 
 ## 常见问题
 ## 高级
