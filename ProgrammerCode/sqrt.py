@@ -1,5 +1,4 @@
 def rewriteSqrt(x):
-	print x
 	if x == 0:
 		return 0
 	left = 1
