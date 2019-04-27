@@ -1,15 +1,20 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-class ReadSkillEffectConfig(object):
-	"""docstring for ReadSkillEffectConfig"""
-	def __init__(self,excelTool, arg):
-		super(ReadSkillEffectConfig, self).__init__()
-		self.arg = arg
+from ReadFightingEffectConfig import ReadFightingEffect
+
+class ReadSkillEffect(object):
+	"""docstring for ReadSkillEffect"""
+	def __init__(self,excelTool):
+		super(ReadSkillEffect, self).__init__()
 		self._excelTool = excelTool
-		self._effectConfig = ReadFightingEffectConfig(excelTool)
+		self._effectConfig = ReadFightingEffect(excelTool)
 	
 	def readSkillConfig(self,path,key,index):
+		print "%s   %s  %d" % (type(key),key,key == False)
+		if key == False:
+			return
+		print "="*10
 		if ";" in key:
 			key = key.split(";")[0]
 		if "," in key:
@@ -18,12 +23,11 @@ class ReadSkillEffectConfig(object):
 		if config == None:
 			print "SkillEffect中查找不到key值 %s" % key
 			return
-		effectInfo = {}
-		allValues = config.items()
-		for key,value in allValues:
-			tag = value["tag"]
-			effectData = value.has_key("effects") and value["effects"]
-			effectList = None
+		effectInfo = []
+		tag = config["tag"]
+		effectData = config.has_key("effects") and config["effects"]
+		if effectData != None:
+			effectList = []
 			if ";" in effectData:
 				effectList = effectData.split(";")
 			elif "," in effectData:
@@ -33,7 +37,10 @@ class ReadSkillEffectConfig(object):
 			if effectList != None:
 				for value in effectList:
 					effectConfig = self._effectConfig.readEffectConfig(path,value,index)
-					effectInfo[tag] = effectConfig
+					effectInfo.append(effectConfig)
+		else:
+			print "SkillEffect tag %s has none effects"%(tag)
+				
 
 		data = {}
 		data["SkillEffect"] = config

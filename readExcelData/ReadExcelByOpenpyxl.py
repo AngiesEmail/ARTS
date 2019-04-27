@@ -9,16 +9,15 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-class ReadExcelOpenpyxl(object):
-	"""docstring for ReadExcelOpenpyxl"""
-	def __init__(self, arg):
-		super(ReadExcelOpenpyxl, self).__init__()
-		self.arg = arg
+class ReadExcel(object):
+	"""docstring for ReadExcel"""
+	def __init__(self):
+		super(ReadExcel, self).__init__()
 
 	def getConfigData(self,path,tag,index):
-		config = readExcelData(path,tag,index)
+		config = self.readExcelData(path,tag,index)
 		if config != None:
-			configToDict = convertRowDict(config[0],config[1])
+			configToDict = self.convertRowDict(config[0],config[1])
 			return configToDict
 
 	def readExcelData(self,path,tag,index):
@@ -27,19 +26,19 @@ class ReadExcelOpenpyxl(object):
 		for name in sheetNames:
 			if not ("$" in name):
 				sheet = wb[name]
-				result = readSheetData(sheet,tag)
+				result = self.readSheetData(sheet,tag)
 				if result != None:
-					keyList = readExcelColKeyList(sheet,index)
+					keyList = self.readExcelColKeyList(sheet,index)
 					return [keyList,result]
 
 	def readExcelColKeyList(self,sheet,index):
 		rowsList = sheet.rows
-		rowData = readRowDataByIndex(rowsList,index)
+		rowData = self.readRowDataByIndex(rowsList,index)
 		return rowData
 	
 	def readSheetData(self,sheet,tag):
 		rowsList = sheet.rows
-		return readRowData(rowsList,tag)
+		return self.readRowData(rowsList,tag)
 
 	def readRowData(self,rowsList,tag):
 		for row in rowsList:

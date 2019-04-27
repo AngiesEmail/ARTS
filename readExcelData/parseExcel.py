@@ -136,10 +136,10 @@ if __name__ == "__main__":
 	rowIndex = 1
 
 	levelId = "10101"
-	path = "Development/LevelInfo.xlsx"
-	enemyPath = "Development/EnemyInfo.xlsx"
-	skillPath = "Development/SkillEffect.xlsx"
-	effectPath = "Development/FightingEffectConfig.xlsx"
+	path = "../Development/LevelInfo.xlsx"
+	enemyPath = "../Development/EnemyInfo.xlsx"
+	skillPath = "../Development/SkillEffect.xlsx"
+	effectPath = "../Development/FightingEffectConfig.xlsx"
 
 	print "查询表：LevelInfo"
 	result = readLevelInfo(path,levelId)

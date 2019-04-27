@@ -1,8 +1,14 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import json
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+from ReadExcelByOpenpyxl import ReadExcel
+from ReadHeroInfoConfig import ReadHeroInfo
+from ReadEnemyInfoConfig import ReadEnemyInfo
 
-path = "Development/"
+path = "../../work/DK/Numeric/Development/"
 
 def saveDataToJson(data):
 	jsonData = json.dumps(data) 
@@ -11,7 +17,7 @@ def saveDataToJson(data):
 	f.close()
 
 if __name__ == "__main__":
-	excelTool = ReadExcelByOpenpyxl()
-	heroTool = ReadHeroInfoConfig(excelTool)
-	data = heroTool.readHeroInfo(path,"Hero101",3)
+	excelTool = ReadExcel()
+	heroTool = ReadEnemyInfo(excelTool)
+	data = heroTool.readEnemyInfo(path,"robot1702",3)
 	saveDataToJson(data)

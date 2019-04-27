@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-class ReadEnemyInfoConfig(object):
-	"""docstring for ReadEnemyInfoConfig"""
-	def __init__(self,excelTool, arg):
-		super(ReadEnemyInfoConfig, self).__init__()
-		self.arg = arg
+from ReadSkillEffectConfig import ReadSkillEffect
+
+class ReadEnemyInfo(object):
+	"""docstring for ReadEnemyInfo"""
+	def __init__(self,excelTool):
+		super(ReadEnemyInfo, self).__init__()
 		self._excelTool = excelTool
-		self._skillTool = ReadSkillEffectConfig(excelTool)
+		self._skillTool = ReadSkillEffect(excelTool)
 		self._keyList = ["skill0","skill1(skillId,rate)","skill2","skill3"]
 
 	def readEnemyInfo(self,path,key,index):
@@ -22,7 +23,7 @@ class ReadEnemyInfoConfig(object):
 			if skillId != None:
 				skillInfo = self._skillTool.readSkillConfig(path,skillId,index)
 				if skillInfo != None:
-					skillList[key] = skillInfo
+					skillList[skillId] = skillInfo
 		
 		data = {}
 		data["EnemyInfo"] = config

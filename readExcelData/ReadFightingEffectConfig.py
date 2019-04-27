@@ -1,11 +1,10 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-class ReadFightingEffectConfig(object):
-	"""docstring for ReadFightingEffectConfig"""
-	def __init__(self, excelTool,arg):
-		super(ReadFightingEffectConfig, self).__init__()
-		self.arg = arg
+class ReadFightingEffect(object):
+	"""docstring for ReadFightingEffect"""
+	def __init__(self, excelTool):
+		super(ReadFightingEffect, self).__init__()
 		self._excelTool = excelTool
 	
 	def readEffectConfig(self,path,key,index):

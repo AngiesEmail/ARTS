@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-class ReadHeroInfoConfig(object):
-	"""docstring for ReadHeroInfoConfig"""
-	def __init__(self,excelTool, arg):
-		super(ReadHeroInfoConfig, self).__init__()
-		self.arg = arg
+from ReadSkillEffectConfig import ReadSkillEffect
+
+class ReadHeroInfo(object):
+	"""docstring for ReadHeroInfo"""
+	def __init__(self,excelTool):
+		super(ReadHeroInfo, self).__init__()
 		self._excelTool = excelTool
-		self._skillTool = ReadSkillEffectConfig(excelTool)
+		self._skillTool = ReadSkillEffect(excelTool)
 		self._keyList = ["skill0","skill1(skillId,rate)","skill2(skillId,skillRate)","skill3(skillId,skillRate)","skill4",
 						"skill4_2","skill5","skill6","skill7"]
 
@@ -23,7 +24,7 @@ class ReadHeroInfoConfig(object):
 			if skillId != None:
 				skillInfo = self._skillTool.readSkillConfig(path,skillId,index)
 				if skillInfo != None:
-					skillList[key] = skillInfo
+					skillList[skillId] = skillInfo
 		
 		data = {}
 		data["HeroInfo"] = config
