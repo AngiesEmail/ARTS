@@ -7,6 +7,7 @@ sys.setdefaultencoding('utf8')
 from ReadExcelByOpenpyxl import ReadExcel
 from ReadHeroInfoConfig import ReadHeroInfo
 from ReadEnemyInfoConfig import ReadEnemyInfo
+from ReadLevelInfoConfig import ReadLevelInfo
 
 path = "../../work/DK/Numeric/Development/"
 
@@ -18,6 +19,6 @@ def saveDataToJson(data):
 
 if __name__ == "__main__":
 	excelTool = ReadExcel()
-	heroTool = ReadEnemyInfo(excelTool)
-	data = heroTool.readEnemyInfo(path,"robot1702",3)
+	heroTool = ReadLevelInfo(excelTool)
+	data = heroTool.readLevelData(path,"10101",3)
 	saveDataToJson(data)

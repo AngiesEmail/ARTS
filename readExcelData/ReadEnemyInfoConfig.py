@@ -16,7 +16,9 @@ class ReadEnemyInfo(object):
 		if config == None:
 			print "EnemyInfo中查找不到key值 %s" % key
 			return
-		tag = config["tag"]
+		tag = config.has_key("tag") and config["tag"]
+		if tag == None:
+			return
 		skillList = {}
 		for key in self._keyList:
 			skillId = config.has_key(key) and config[key]
