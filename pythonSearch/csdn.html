@@ -1,0 +1,4120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+  <meta content="webkit" name="renderer">
+   <meta content="webkit" name="force-rendering">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+    <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <meta content="black" name="apple-mobile-web-app-status-bar-style"/>
+    <meta content='{"pid":"blog"}' name="report"/>
+    <meta content="always" name="referrer"/>
+    <meta content="no-siteapp" http-equiv="Cache-Control">
+     <angie href="#" media="handheld" rel="alternate"/>
+     <meta content="5a59773ab8077d4a62bf469ab966a63b_1497598848" name="shenma-site-verification"/>
+     <meta content='{"autorun":true,"install":true,"keyword":"【一步步学OpenGL 4】-《着色器》 - Mr_厚厚的博客"}' name="angie-baidu-search"/>
+     <title>
+      【一步步学OpenGL 4】-《着色器》 - Mr_厚厚的博客 - angie博客
+     </title>
+     <style>
+      .MathJax, .MathJax_Message, .MathJax_Preview{
+            display: none
+        }
+     </style>
+    </meta>
+   </meta>
+  </meta>
+ </head>
+ <body class="nodata">
+
+  <script type="text/javascript">
+   var NEWS_FEED = function(){}
+  </script>
+ </body>
+</html>
+<div class="operating">
+</div>
+<article class="baidu_pl">
+ <div class="article_content clearfix" id="article_content">
+   <div class="markdown_views prism-atom-one-light" id="content_views">
+    <!-- flowchart 箭头图标 勿删 -->
+    <svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+     <path d="M5,0 0,2.5 5,5z" id="raphael-marker-block" stroke-linecap="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
+     </path>
+    </svg>
+    <h3 id="教程4">
+     <strong>
+      <em>
+       教程4：
+      </em>
+     </strong>
+    </h3>
+    <h1 id="着色器">
+     <strong>
+      着色器
+     </strong>
+    </h1>
+    <p>
+     <strong>
+      <em>
+       原文：
+      </em>
+     </strong>
+     <a data-token="9b7a9a89540d296b3ec4d7c08a8593df" href="http://ogldev.atspace.co.uk/www/tutorial04/tutorial04.html" rel="nofollow">
+      http://ogldev.atspace.co.uk/www/tutorial04/tutorial04.html
+     </a>
+    </p>
+    <p>
+     <strong>
+      <em>
+       angie完整版专栏：
+      </em>
+     </strong>
+     <a data-token="44c8f703762c0fcbc067c20d6e341177" href="http://blog.angie.net/column/details/13062.html" rel="nofollow">
+      http://blog.angie.net/column/details/13062.html
+     </a>
+    </p>
+    <hr/>
+    <h3 id="背景">
+     <strong>
+      <em>
+       背景：
+      </em>
+     </strong>
+    </h3>
+    <p>
+     从这篇教程开始，我们将使用shader着色器来实现每一个效果和技术点，着色器是目前做3D图形最流行的方式。在某种程度上着色器功能是一个“退步”，或者说技术实现上的一个回退，因为本来多数固定功能管线自身就提供的那些3D功能（开发者只需要定义配置参数即可实现的功能函数）现在开发者必须自己通过shader着色器来实现，这也是其强大的地方，开发者能更加自由的通过编程实现自己的图形效果，使开发更加灵活和具有创新性。
+    </p>
+    <p>
+     <strong>
+      PS：理解这篇文章的介绍，对OpenGL的渲染管线整个流程就很清晰了！
+     </strong>
+    </p>
+    <p>
+     OpenGL的可编程管线可以通过下面的图示来表示：
+    </p>
+    <p>
+     <strong>
+      顶点处理器—&gt;几何处理器—&gt;裁剪器—&gt;光栅器（片段处理器）
+     </strong>
+    </p>
+    <p>
+     <img alt="可编程管线" angie="https://img-blog.angie.net/20160910140257317" title=""/>
+    </p>
+    <p>
+     <strong>
+      Vertex Processor顶点处理器阶段
+     </strong>
+     负责执行处理经过管线的每一个顶点的vertex shader顶点着色代码（顶点的数量取决于draw call的参数）。这里顶点着色器还不知道渲染的图元的topology拓扑结构是怎样的，另外不可以在顶点着色处理器阶段删除丢弃顶点，每个顶点有且只有一次经过顶点处理器，要经过变换后继续进入管线的下一步。
+    </p>
+    <p>
+     下一个阶段是
+     <strong>
+      Geometry Processor几何处理器阶段
+     </strong>
+     。在这个阶段，图元的完整数据（比如：所有的顶点数据）和相邻顶点的数据全部都提供给
+     <strong>
+      shader着色器
+     </strong>
+     ，使其必须眷顾更多的信息，包括除了顶点本身的其他的一些额外的更全面完整的信息。几何处理器还可以将输出的图形拓扑结构转换成在draw call中选择的另一种结构。比如：你可以提供一系列的点来产生由两个三角形所构成的图形（像四边形），也就是顶点链接成三角形图元，两个三角形图元可以构成四边形（一种叫做
+     <strong>
+      billboarding公告板技术
+     </strong>
+     的技术）。另外，也可以直接给几何着色器提供多个顶点然后根据你选择的输出拓扑结构产生多种图元。
+    </p>
+    <p>
+     在管线的下一个阶段就要开始
+     <strong>
+      clip裁剪
+     </strong>
+     工作了。这是一个固定功能单元的很明确的一个任务：像前面教程中一样它将所有图元裁剪到那个单位化的盒子模型内，它另外还会将图元裁剪在Z轴的远近平面范围内（也就是说太远或太近都不显示）。同时也提供用户自定义的裁剪平面进行自定义的裁剪。经过裁剪后保留下来的顶点现在会被映射到屏幕空间坐标系上，光栅器将会根据他们的拓扑结构把他们渲染到屏幕上。举个例子：对于三角形的裁剪就是发现三角形内部所有可见的点，对每个点
+     <strong>
+      rasterizer光栅器
+     </strong>
+     都会触发
+     <strong>
+      fragment processor片段处理器
+     </strong>
+     ，现在你可以对每个片段像素定义颜色，颜色可以从一张材质上取或者使用其他取色技术方式。
+    </p>
+    <p>
+     上面这三个可编程阶段
+     <strong>
+      （vertex processor顶点处理、geometry processor几何处理和fragment processor片段处理）
+     </strong>
+     都是可选的而不是必须的。如果不在这几个处理器上绑定自己的shaer着色器，那么就会执行一些默认的函数功能，也就是备胎着色器。
+    </p>
+    <p>
+     Shader着色器的使用跟C/C++程序的创建过程类似。首先你要写一个shader着色器文本并使其在你的程序中有效可用，这个过程可以通过依次简单的引用这些源码脚本或者从外部文件中加载，注意都是以字符串数组的形式。然后一个个的编译这些shader文本成shader对象。然后你就可以将这些shader着色器连接到单个程序中并加载到GPU中。链接这些shader可以使驱动器能够有机会精减这些shader并根据他们的关系优化他们。例如：可能一个顶点着色器发出的法向量在相应的片段着色器阶段中被忽视，这样驱动中的
+     <strong>
+      GLSL编译器
+     </strong>
+     就会移除着色器中与这个法向量相关的函数功能从而更快的执行这个顶点着色器。如果之后那个着色器又匹配了需要用到那个法向量的片段着色器，然后连接到其他程序后会产生一个不同的顶点着色器。
+    </p>
+    <h3 id="源代码详解">
+     <strong>
+      <em>
+       源代码详解
+      </em>
+     </strong>
+    </h3>
+    <p>
+     (1)
+     <code>
+      GLuint ShaderProgram = glCreateProgram();
+     </code>
+     <br/>
+     我们通过创建程序对象来
+     <strong>
+      建立shader着色器程序
+     </strong>
+     。我们将把所有的着色器连接到这个对象上。
+    </p>
+    <p>
+     (2)
+     <code>
+      GLuint ShaderObj = glCreateShader(ShaderType);
+     </code>
+     <br/>
+     使用上面的函数
+     <strong>
+      创建两个shader着色器对象
+     </strong>
+     。其中一个使用的ShaderType为GL_VERTEX_SHADER，另一个的类型为GL_FRAGMENT_SHADER。这两个着色器对象的shader脚本源定义和他们的编译方式是一样的。
+    </p>
+    <p>
+     (3)
+     <br/>
+     <code>
+      const GLchar* p[1];
+     </code>
+     <br/>
+     <code>
+      p[0] = pShaderText;
+     </code>
+     <br/>
+     <code>
+      GLint Lengths[1];
+     </code>
+     <br/>
+     <code>
+      Lengths[0]= strlen(pShaderText);
+     </code>
+     <br/>
+     <code>
+      glShaderSource(ShaderObj, 1, p, Lengths);
+     </code>
+     <br/>
+     <strong>
+      在编译shader对象之前我们必须先定义它的代码源。
+     </strong>
+     函数glShaderSource以shader对象为参数，使你可以灵活的定义代码来源。shader源代码（也就是我们所常说的shader脚本）可以由多个字符串数组排布组合而成，你需要提供一个指针数组来对应指向这些字符窜数组，同时要提供一个整型数组来对应表示每个数组的长度。为了简单，我们这里只使用一个字符串数组来保存所有的shader源代码，并且分别用数组的一个元素来分别指向这个字符串数组和表示数组的长度。
+     <br/>
+     第二个参数表示的是这两个数组的元素个数（我们的例子中则只有1个）。
+    </p>
+    <p>
+     (4)
+     <code>
+      glCompileShader(ShaderObj);
+     </code>
+     <br/>
+     编译shader对象是非常简单的，只要一句话即可。。。
+    </p>
+    <p>
+     (5)
+     <code>
+      GLint success;
+      <br/>
+      glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &amp;success);
+      <br/>
+      if (!success) {
+      <br/>
+      GLchar InfoLog[1024];
+      <br/>
+      glGetShaderInfoLog(ShaderObj, sizeof(InfoLog), NULL, InfoLog);
+      <br/>
+      fprintf(stderr, "Error compiling shader type %d: '%s'\n", ShaderType, InfoLog);
+      <br/>
+      }
+     </code>
+     <br/>
+     。。。然而按照期望，你通常只能遇到很少的编译错误。使用上面的代码块可以获得编译状态，并且可以打印编译器碰到的所有编译错误。
+    </p>
+    <p>
+     (6)
+     <code>
+      glAttachShader(ShaderProgram, ShaderObj);
+     </code>
+     <br/>
+     最后，我们
+     <strong>
+      将编译好的shader对象绑定在program object程序对象上
+     </strong>
+     。这和定义一系列对象然后在makefile中连接类似。由于这里没有makefile所以要通过编程来实现连接绑定。只有绑定的对象才会加入到连接过程中。
+    </p>
+    <p>
+     (7)
+     <code>
+      glangieProgram(ShaderProgram);
+     </code>
+     <br/>
+     <strong>
+      编译好所有的shader对象并将他们绑定到程序中后我就可以连接他们了。
+     </strong>
+     注意在完成程序的连接后你可以通过调用函数glDetachShader和glDeleteShader来清除每个中介shader对象。OpenGL保存着由它产生的多数对象的引用计数，如果一个shader对象被创建后又被删除的话驱动程序也会同时清除掉它，但是如果他被绑定在程序上，只调用glDeleteShader函数只是会标记它等待删除，只有等你调用glDetachShader后它的引用计数才会被置零然后被移除掉。
+    </p>
+    <p>
+     (8)
+     <br/>
+     <code>
+      glGetProgramiv(ShaderProgram, GL_angie_STATUS, &amp;Success);
+      <br/>
+      if (Success == 0) {
+      <br/>
+      glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+      <br/>
+      fprintf(stderr, "Error angieing shader program: '%s'\n", ErrorLog);
+      <br/>
+      }
+     </code>
+     <br/>
+     注意我们检查和程序相关的错误（比如angie链接错误）和shader着色器相关的错误是不太一样的。我们
+     <strong>
+      使用glGetProgramiv而不是glGetShaderiv，glGetProgramInfoLog而不是glGetShaderInfoLog
+     </strong>
+     。
+    </p>
+    <p>
+     (9)
+     <code>
+      glValidateProgram(ShaderProgram);
+     </code>
+     <br/>
+     你也许会问为什么我们在程序成功angie后还要再验证它。不同的地方是angie错误的检查是和shader结合在一起的，而上面这句代码检查的是在
+     <strong>
+      当前的管线状态程序是否可以被执行
+     </strong>
+     。在一个有大量shader和状态变化的应用中，最好在每次draw call之前都进行验证。在我们这个简单的应用中我们只检查一次。你也想只在开发的时候做这个检查，避免最终这个项目产品的开销。
+    </p>
+    <p>
+     (10)
+     <code>
+      glUseProgram(ShaderProgram);
+     </code>
+     <br/>
+     最后，
+     <strong>
+      要使用连接好的shader程序你需要用上面的回调函数将它设置到管线声明中
+     </strong>
+     。这个程序将在所有的draw call中一直生效直到你用另一个替换掉它或者使用glUseProgram指令将其置NULL明确地禁用它。如果你创建的shader程序只包含一种类型的shader（只是为某一个阶段添加的自定义shader），那么在其他阶段的该操作将会使用它们默认的固定功能操作。
+    </p>
+    <p>
+     到现在我们已经完成了OpenGL中和shader相关操作的准备工作的学习。在这篇教程之后的内容主要是关于顶点着色器和片段着色器（包含在pVS和pFS脚本中）。
+    </p>
+    <p>
+     (11)
+     <code>
+      #version 330
+     </code>
+     <br/>
+     这个告诉编译器我们的
+     <strong>
+      目标GLSL编译器版本是3.3
+     </strong>
+     .如果编译器不支持这个版本会抛出一个错误。
+    </p>
+    <p>
+     (12)
+     <code>
+      layout (location = 0) in vec3 Position;
+     </code>
+     <br/>
+     这段语法代码会出现在
+     <strong>
+      顶点着色器
+     </strong>
+     中，它表示声明一个含有3个浮点数的向量的具体顶点属性将在shader中被认为是一个
+     <strong>
+      ‘Position’ 位置
+     </strong>
+     。具体的顶点是说对于在GPU中每一个调用的shader，从缓冲区获得的每一个新顶点的值都会被提供。
+     <br/>
+     代码的第一部分： layout (location = 0)，将缓冲区中的属性名和属性绑定在一起，当我们的顶点有多个属性（位置，法向量，纹理坐标等等）的时候这个是必须要指明的。我们必须要让编译器知道缓冲区中顶点的哪个属性要和shader中声明的哪个属性进行映射匹配，有两种办法可以做到：
+     <br/>
+     （1）我们可以像这里我们所做的一样明确设置它（为0），那样我们就可以在我们的应用中使用一个写死的编码值（使用第一个参数调用glVertexAttributePointer）；
+     <br/>
+     （2）或者我们可以不管它（简单的在shader中声明’in vec3 Position’）然后使用glGetAttribLocation检索应用中这个实时的位置。在那种情况下，我们还需要为glVertexAttributePointer提供返回值，而不是使用写死的编码值。这里我们选择简单的方式，但是在复杂的应用中最好让编译器定义属性的索引标志然后实时检索他们。这样可以更容易的从多个来源整合shader着色器而不用使他们适应你的缓冲器布局。
+    </p>
+    <p>
+     (13)
+     <code>
+      void main()
+     </code>
+     <br/>
+     你可以通过连接多个shader对象来创建你的着色器。然而，每一个着色器阶段（VS顶点着色,GS几何着色,FS片段着色）有且只有一个main函数作为
+     <strong>
+      shader着色器的入口
+     </strong>
+     。例如：你可以创建一个拥有多功能的光照库并和你的shader连接，但是所有的函数都不可以命名为‘main’。
+    </p>
+    <p>
+     (14)
+     <code>
+      gl_Position = vec4(0.5 * Position.x, 0.5 * Position.y, Position.z, 1.0);
+     </code>
+     <br/>
+     这里我们对引入的
+     <strong>
+      顶点位置做固定编码转换
+     </strong>
+     ，我们让X和Y的值减半并保持Z的值不变。
+     <br/>
+     ‘gl_Position’ 是一个内置的变量，用来保存同类的（包含X,Y,Z和W元素）顶点位置。光栅器将会查找那个变量并用它作为屏幕空间（跟随一些更多的变换）的位置。将X和Y的值减半意味着让三角形的尺寸变成之前教程中三角形的四分之一。注意我们要设置W的值为1.0，这个对三角形的正确显示极其重要。将物体从3d投影到2d事实上是经过两个独立的阶段完成的。首先，你要使所有的顶点乘以投影变换矩阵（这个会在一些教程中建立），然后，在顶点到达光栅器之前GPU会自动对位置属性进行所谓的‘透视分割’，这意味着它将使用W分量分割gl_Position的所有其他分量元素。在这个教程中我们还没有在顶点着色器中进行任何的投影变换，但是这个‘透视分割’阶段是我们无法禁止的。无论我们从顶点着色器输出什么样的gl_Position值都将被HW使用它的W分量所分割，我们需要注意这个否则我们无法得到我们期望的结果。为了规避‘透视分割’的影响我们设置W为1.0。被1.0分割不会影响顶点位置中其他分量的值从而顶点可以仍然在我们的单位化的盒子模型内部。
+    </p>
+    <p>
+     如果一切工作运行正确，顶点 (-0.5, -0.5), (0.5, -0.5) 和 (0.0, 0.5)将会到达光栅器，裁剪器无须作任何事情，因为所有的顶点都在单位化盒子模型内部。这些值将会被映射到屏幕空间坐标系，并且光栅器开始处理三角形内部的所有点，对于每个点片段着色器都会被执行。
+     <br/>
+     下面的代码开始来自于片段着色器。
+    </p>
+    <p>
+     (15)
+     <code>
+      out vec4 FragColor;
+     </code>
+     <br/>
+     通常片段着色器的工作就是定义每个片段（像素）的颜色。另外，片段着色器可以抛弃所有的像素或者改变它的Z值（这会影响后面Z test的结果）。
+     <strong>
+      输出的颜色
+     </strong>
+     是通过上面的代码中声明的变量完成的。4个分量代表
+     <strong>
+      R,G,B和A（透明度）
+     </strong>
+     。你在这些变量上设置的值将会被光栅器接收最后写入帧缓冲中。
+    </p>
+    <p>
+     (16)
+     <code>
+      FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+     </code>
+     <br/>
+     In the previous couple of tutorials there wasn’t a fragment shader so the everything was drawn in the default color of white. Here we set FragColor to red.
+     <br/>
+     在前面的教程中都没有
+     <strong>
+      片段着色器
+     </strong>
+     所以所有的绘制都默认使用白色。这里我们可以设置FragColor为红色。
+    </p>
+    <h3 id="示例demo">
+     <strong>
+      <em>
+       示例Demo
+      </em>
+     </strong>
+    </h3>
+    <pre class="prettyprint"><code class="hljs cpp">
+<span class="hljs-preprocessor">#include &lt;stdio.h&gt;</span>
+<span class="hljs-preprocessor">#include &lt;string.h&gt;</span>
+<span class="hljs-preprocessor">#include &lt;GL/glew.h&gt;</span>
+<span class="hljs-preprocessor">#include &lt;GL/freeglut.h&gt;</span>
+
+<span class="hljs-preprocessor">#include "ogldev_util.h" <span class="hljs-comment">//这里要添加作者的工具类用于读取文本文件</span></span>
+<span class="hljs-preprocessor">#include "ogldev_math_3d.h"</span>
+
+GLuint VBO;
+
+<span class="hljs-comment">// 定义要读取的顶点着色器脚本和片断着色器脚本的文件名，作为文件读取路径（这样的话shader.vs和shader.fs文件要放到工程的根目录下，保证下面定义的是这两个文件的文件路径）</span>
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>* pVSFileName = <span class="hljs-string">"shader.vs"</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>* pFSFileName = <span class="hljs-string">"shader.fs"</span>;
+
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> RenderSceneCB()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glEnableVertexAttribArray(<span class="hljs-number">0</span>);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(<span class="hljs-number">0</span>, <span class="hljs-number">3</span>, GL_FLOAT, GL_FALSE, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+
+    <span class="hljs-comment">// 依然还是绘制一个三角形</span>
+    glDrawArrays(GL_TRIANGLES, <span class="hljs-number">0</span>, <span class="hljs-number">3</span>);
+
+    glDisableVertexAttribArray(<span class="hljs-number">0</span>);
+
+    glutSwapBuffers();
+}
+
+
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> InitializeGlutCallbacks()
+{
+    glutDisplayFunc(RenderSceneCB);
+}
+
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> CreateVertexBuffer()
+{
+    Vector3f Vertices[<span class="hljs-number">3</span>];
+    Vertices[<span class="hljs-number">0</span>] = Vector3f(-<span class="hljs-number">1.0f</span>, -<span class="hljs-number">1.0f</span>, <span class="hljs-number">0.0f</span>);
+    Vertices[<span class="hljs-number">1</span>] = Vector3f(<span class="hljs-number">1.0f</span>, -<span class="hljs-number">1.0f</span>, <span class="hljs-number">0.0f</span>);
+    Vertices[<span class="hljs-number">2</span>] = Vector3f(<span class="hljs-number">0.0f</span>, <span class="hljs-number">1.0f</span>, <span class="hljs-number">0.0f</span>);
+
+    glGenBuffers(<span class="hljs-number">1</span>, &amp;VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, <span class="hljs-keyword">sizeof</span>(Vertices), Vertices, GL_STATIC_DRAW);
+}
+
+<span class="hljs-comment">// 使用shader文本编译shader对象，并绑定shader都想到着色器程序中</span>
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> AddShader(GLuint ShaderProgram, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>* pShaderText, GLenum ShaderType)
+{
+    <span class="hljs-comment">// 根据shader类型参数定义两个shader对象</span>
+    GLuint ShaderObj = glCreateShader(ShaderType);
+    <span class="hljs-comment">// 检查是否定义成功</span>
+    <span class="hljs-keyword">if</span> (ShaderObj == <span class="hljs-number">0</span>) {
+        <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"Error creating shader type %d\n"</span>, ShaderType);
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);
+    }
+
+    <span class="hljs-comment">// 定义shader的代码源</span>
+    <span class="hljs-keyword">const</span> GLchar* p[<span class="hljs-number">1</span>];
+    p[<span class="hljs-number">0</span>] = pShaderText;
+    GLint Lengths[<span class="hljs-number">1</span>];
+    Lengths[<span class="hljs-number">0</span>]= <span class="hljs-built_in">strlen</span>(pShaderText);
+    glShaderSource(ShaderObj, <span class="hljs-number">1</span>, p, Lengths);
+    glCompileShader(ShaderObj);<span class="hljs-comment">// 编译shader对象</span>
+
+    <span class="hljs-comment">// 检查和shader相关的错误</span>
+    GLint success;
+    glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &amp;success);
+    <span class="hljs-keyword">if</span> (!success) {
+        GLchar InfoLog[<span class="hljs-number">1024</span>];
+        glGetShaderInfoLog(ShaderObj, <span class="hljs-number">1024</span>, NULL, InfoLog);
+        <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"Error compiling shader type %d: '%s'\n"</span>, ShaderType, InfoLog);
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+    }
+
+    <span class="hljs-comment">// 将编译好的shader对象绑定到program object程序对象上</span>
+    glAttachShader(ShaderProgram, ShaderObj);
+}
+
+<span class="hljs-comment">// 编译着色器函数</span>
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> CompileShaders()
+{
+    <span class="hljs-comment">// 创建着色器程序</span>
+    GLuint ShaderProgram = glCreateProgram();
+    <span class="hljs-comment">// 检查是否创建成功</span>
+    <span class="hljs-keyword">if</span> (ShaderProgram == <span class="hljs-number">0</span>) {
+        <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"Error creating shader program\n"</span>);
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+    }
+
+    <span class="hljs-comment">// 存储着色器文本的字符串缓冲</span>
+    <span class="hljs-built_in">string</span> vs, fs;
+    <span class="hljs-comment">// 分别读取着色器文件中的文本到字符串缓冲区</span>
+    <span class="hljs-keyword">if</span> (!ReadFile(pVSFileName, vs)) {
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+    };
+    <span class="hljs-keyword">if</span> (!ReadFile(pFSFileName, fs)) {
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+    };
+
+    <span class="hljs-comment">// 添加顶点着色器和片段着色器</span>
+    AddShader(ShaderProgram, vs.c_str(), GL_VERTEX_SHADER);
+    AddShader(ShaderProgram, fs.c_str(), GL_FRAGMENT_SHADER);
+
+    <span class="hljs-comment">// 链接shader着色器程序，并检查程序相关错误</span>
+    GLint Success = <span class="hljs-number">0</span>;
+    GLchar ErrorLog[<span class="hljs-number">1024</span>] = { <span class="hljs-number">0</span> };
+    glangieProgram(ShaderProgram);
+    glGetProgramiv(ShaderProgram, GL_angie_STATUS, &amp;Success);
+    <span class="hljs-keyword">if</span> (Success == <span class="hljs-number">0</span>) {
+        glGetProgramInfoLog(ShaderProgram, <span class="hljs-keyword">sizeof</span>(ErrorLog), NULL, ErrorLog);
+        <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"Error angieing shader program: '%s'\n"</span>, ErrorLog);
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+    }
+
+    <span class="hljs-comment">// 检查验证在当前的管线状态程序是否可以被执行</span>
+    glValidateProgram(ShaderProgram);
+    glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &amp;Success);
+    <span class="hljs-keyword">if</span> (!Success) {
+        glGetProgramInfoLog(ShaderProgram, <span class="hljs-keyword">sizeof</span>(ErrorLog), NULL, ErrorLog);
+        <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"Invalid shader program: '%s'\n"</span>, ErrorLog);
+        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+    }
+
+    <span class="hljs-comment">// 设置到管线声明中来使用上面成功建立的shader程序</span>
+    glUseProgram(ShaderProgram);
+}
+
+<span class="hljs-comment">// 主函数</span>
+<span class="hljs-keyword">int</span> main(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">char</span>** argv)
+{
+    glutInit(&amp;argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
+    glutInitWindowSize(<span class="hljs-number">1024</span>, <span class="hljs-number">768</span>);
+    glutInitWindowPosition(<span class="hljs-number">100</span>, <span class="hljs-number">100</span>);
+    glutCreateWindow(<span class="hljs-string">"Tutorial 04"</span>);
+
+    InitializeGlutCallbacks();
+
+    <span class="hljs-comment">// 必须在glut初始化后！</span>
+    GLenum res = glewInit();
+    <span class="hljs-keyword">if</span> (res != GLEW_OK) {
+      <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"Error: '%s'\n"</span>, glewGetErrorString(res));
+      <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+
+    <span class="hljs-built_in">printf</span>(<span class="hljs-string">"GL version: %s\n"</span>, glGetString(GL_VERSION));
+
+    glClearColor(<span class="hljs-number">0.0f</span>, <span class="hljs-number">0.0f</span>, <span class="hljs-number">0.0f</span>, <span class="hljs-number">0.0f</span>);
+
+    CreateVertexBuffer();
+
+    <span class="hljs-comment">// 编译着色器</span>
+    CompileShaders();
+
+    glutMainLoop();
+
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre>
+    <p>
+     <strong>
+      顶点着色器shader.vs脚本代码：
+     </strong>
+    </p>
+    <pre class="prettyprint"><code class="hljs glsl">
+<span class="hljs-preprocessor">#version 330  //告诉编译器我们的目标GLSL编译器版本是3.3</span>
+
+<span class="hljs-keyword">layout</span> (location = <span class="hljs-number">0</span>) <span class="hljs-keyword">in</span> <span class="hljs-keyword">vec3</span> Position; <span class="hljs-comment">// 绑定定点属性名和属性，方式二缓冲属性和shader属性对应映射</span>
+
+<span class="hljs-keyword">void</span> main()
+{
+    <span class="hljs-built_in">gl_Position</span> = <span class="hljs-keyword">vec4</span>(<span class="hljs-number">0.5</span> * Position.x, <span class="hljs-number">0.5</span> * Position.y, Position.z, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// 为glVertexAttributePointer提供返回值</span>
+}
+</code></pre>
+    <p>
+     <strong>
+      片段着色器shader.fs脚本代码：
+     </strong>
+    </p>
+    <pre class="prettyprint"><code class="hljs glsl">
+<span class="hljs-preprocessor">#version 330  //告诉编译器我们的目标GLSL编译器版本是3.3</span>
+
+<span class="hljs-keyword">out</span> <span class="hljs-keyword">vec4</span> FragColor;  <span class="hljs-comment">// 片段着色器的输出颜色变量</span>
+
+<span class="hljs-comment">// 着色器的唯一入口函数</span>
+<span class="hljs-keyword">void</span> main()
+{
+    <span class="hljs-comment">// 定义输出颜色值</span>
+    FragColor = <span class="hljs-keyword">vec4</span>(<span class="hljs-number">1.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">1.0</span>);
+}
+</code></pre>
+    <h3 id="运行效果图">
+     <strong>
+      运行效果图
+     </strong>
+    </h3>
+    <p>
+     <img alt="这里写图片描述" angie="https://img-blog.angie.net/20160913140438134" title=""/>
+    </p>
+   </div>
+   <angie href="https://angieimg.cn/release/phoenix/mdeditor/markdown_views-e44c3c0e64.css" rel="stylesheet"/>
+  </angie>
+ </div>
+</article>
+<div class="hide-article-box hide-article-pos text-center">
+ <a class="btn-readmore" data-report-click='{"mod":"popu_376","dest":"https://blog.angie.net/cordova/article/details/52495077","strategy":"readmore"}' data-report-view='{"mod":"popu_376","dest":"https://blog.angie.net/cordova/article/details/52495077","strategy":"readmore"}'>
+  展开阅读全文
+  <svg aria-hidden="true" class="icon chevrondown">
+   <use xangie:href="#angiec-chevrondown">
+   </use>
+  </svg>
+ </a>
+</div>
+<script>
+ $(".MathJax").remove();
+    if ($('div.markdown_views pre.prettyprint code.hljs').length > 0) {
+        $('div.markdown_views')[0].className = 'markdown_views';
+    }
+    var persentSet = 1;
+</script>
+<script angie="https://angieimg.cn/release/phoenix/vendor/angieCatcher/angieCatcher-3a08af3a5f.js">
+</script>
+<div class="recommend-box">
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52504118","strategy":"BlogCommendFromMachineLearnPai2","index":"0"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52504118" target="_blank" title="【一步步学OpenGL 5】-《一致变量Uniform Variables》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     5】-《一致变量Uniform Variables》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-13
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          7504
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52504118" target="_blank" title="【一步步学OpenGL 5】-《一致变量Uniform Variables》">
+     <span class="desc oneline">
+      教程5：一致变量原文：http://ogldev.atspace.co.uk/www/tutorial05/tutorial05.html背景在这个教程中我们将遇到一个新的shader变量：一致变量（...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+</div>
+<a id="commentBox">
+</a>
+<div class="comment-box">
+ <div class="comment-edit-box d-flex">
+  <a id="commentsedit">
+  </a>
+  <div class="user-img">
+   <a href="javascript:void(0);" target="_blank">
+    <img class="show_loginbox" angie="//g.angieimg.cn/static/user-img/anonymous-User-img.png"/>
+   </a>
+  </div>
+  <form id="commentform">
+   <input id="comment_replyId" type="hidden"/>
+   <textarea class="comment-content" id="comment_content" name="comment_content" placeholder="想对作者说点什么"></textarea>
+   <div class="opt-box">
+    <!-- d-flex -->
+    <div class="add_code" id="ubbtools">
+     <a code="code" href="#insertcode" target="_self">
+      <i class="icon iconfont icon-daima">
+      </i>
+     </a>
+    </div>
+    <input id="comment_replyId" name="comment_replyId" type="hidden"/>
+    <input id="article_id" name="article_id" type="hidden" value="52495077"/>
+    <input id="comment_userId" name="comment_userId" type="hidden" value=""/>
+    <input id="commentId" name="commentId" type="hidden" value=""/>
+    <div class="angie-tracking-statistics tracking-click" data-report-click='{"mod":"popu_384","dest":""}' style="display: none;">
+     <a class="comment_area_btn" href="#" target="_blank">
+      发表评论
+     </a>
+    </div>
+    <div class="dropdown" id="myDrap">
+     <a aria-expanded="false" aria-haspopup="true" class="dropdown-face d-flex align-items-center" data-toggle="dropdown" role="button">
+      <div class="txt-selected text-truncate">
+       添加代码片
+      </div>
+      <svg aria-hidden="true" class="icon d-block">
+       <use xangie:href="#angiec-triangledown">
+       </use>
+      </svg>
+     </a>
+     <ul aria-labelledby="drop4" class="dropdown-menu" id="commentCode">
+      <li>
+       <a data-code="html">
+        HTML/XML
+       </a>
+      </li>
+      <li>
+       <a data-code="objc">
+        objective-c
+       </a>
+      </li>
+      <li>
+       <a data-code="ruby">
+        Ruby
+       </a>
+      </li>
+      <li>
+       <a data-code="php">
+        PHP
+       </a>
+      </li>
+      <li>
+       <a data-code="csharp">
+        C
+       </a>
+      </li>
+      <li>
+       <a data-code="cpp">
+        C++
+       </a>
+      </li>
+      <li>
+       <a data-code="javascript">
+        JavaScript
+       </a>
+      </li>
+      <li>
+       <a data-code="python">
+        Python
+       </a>
+      </li>
+      <li>
+       <a data-code="java">
+        Java
+       </a>
+      </li>
+      <li>
+       <a data-code="css">
+        CSS
+       </a>
+      </li>
+      <li>
+       <a data-code="sql">
+        SQL
+       </a>
+      </li>
+      <li>
+       <a data-code="plain">
+        其它
+       </a>
+      </li>
+     </ul>
+    </div>
+    <div class="right-box">
+     <span class="tip" id="tip_comment">
+      还能输入
+      <em>
+       1000
+      </em>
+      个字符
+     </span>
+     <input class="btn btn-sm btn-cancel d-none" type="button" value="取消回复"/>
+     <input class="btn btn-sm btn-red btn-comment" type="submit" value="发表评论"/>
+    </div>
+   </div>
+  </form>
+ </div>
+ <div class="comment-list-container">
+  <a id="comments">
+  </a>
+  <div class="comment-list-box">
+  </div>
+  <div class="pagination-box d-none" id="commentPage">
+  </div>
+  <div class="opt-box text-center">
+   <div class="btn btn-sm btn-angie-blue" id="btnMoreComment">
+   </div>
+  </div>
+ </div>
+</div>
+<div class="recommend-box">
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/77986123","strategy":"BlogCommendFromMachineLearnPai2","index":"1"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/77986123" target="_blank" title="【一步步学OpenGL 1】-《打开一个窗口》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     1】-《打开一个窗口》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-14
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          2万+
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/77986123" target="_blank" title="【一步步学OpenGL 1】-《打开一个窗口》">
+     <span class="desc oneline">
+      @专栏介绍：这里开一个专栏，翻译OGLdev的系列教程《OpenGLStepbyStep》，由于本人是个程序员，所以对教程不会完全的简单直译，会根据自己的理解进行一个汉语的解释以及补充，尽量将原文的意...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52494549","strategy":"BlogCommendFromMachineLearnPai2","index":"2"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52494549" target="_blank" title="【一步步学OpenGL 3】-《第一个三角形》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     3】-《第一个三角形》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-10
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1万+
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52494549" target="_blank" title="【一步步学OpenGL 3】-《第一个三角形》">
+     <span class="desc oneline">
+      第一个三角形原文：http://ogldev.atspace.co.uk/www/tutorial03/tutorial03.html背景这篇教程非常简短，我们只是扩展前一个教程来渲染一个三角形。这篇...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52599161","strategy":"BlogCommendFromMachineLearnPai2","index":"3"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52599161" target="_blank" title="【一步步学OpenGL 12】 -《透视投影》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     12】 -《透视投影》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-23
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          8102
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52599161" target="_blank" title="【一步步学OpenGL 12】 -《透视投影》">
+     <span class="desc oneline">
+      教程12透视投影原文：http://ogldev.atspace.co.uk/www/tutorial12/tutorial12.htmlangie完整版专栏：http://blog.angie.net/...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/u013295276/article/details/78279642","strategy":"BlogCommendFromMachineLearnPai2","index":"4"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/u013295276/article/details/78279642" target="_blank" title="OpenGL_11:封装一个自己的着色器类">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     _11:封装一个自己的
+     <em>
+      着色器
+     </em>
+     类
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-19
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          690
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/u013295276/article/details/78279642" target="_blank" title="OpenGL_11:封装一个自己的着色器类">
+     <span class="desc oneline">
+      之前都是通过读取着色器字符串来创建着色器，这样耦合程度很高，并且生成、链接着色器程序也需要写很繁杂的过程。现在我编写一个Shader类来读取着色器文本文件，并且封装那些繁杂的步骤。Shader头文件：...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/u013295276" target="_blank">
+      来自：
+      <span class="blog_title">
+       u013295276的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/jinghouxiang/article/details/50751125","strategy":"BlogCommendFromBaidu","index":"5"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/jinghouxiang/article/details/50751125" target="_blank" title="学习ShaderToy第一天： glsl语言内置函数gl_FragCoord">
+    <h4 class="text-truncate oneline">
+     学习ShaderToy第一天： glsl语言内置函数gl_FragCoord
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       02-26
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1万+
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/jinghouxiang/article/details/50751125" target="_blank" title="学习ShaderToy第一天： glsl语言内置函数gl_FragCoord">
+     <span class="desc oneline">
+      运行环境：Androidopengles版本：2.03D引擎库：Rajawali3DShaderToy上用的shader语言为glsl，效果是用webgl跑的，而webgl封装了opengles， 所...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/jinghouxiang" target="_blank">
+      来自：
+      <span class="blog_title">
+       jinghouxiang的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/llimite/article/details/55050188","strategy":"BlogCommendFromBaidu","index":"6"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/llimite/article/details/55050188" target="_blank" title="gl_FragCoord的xyzw">
+    <h4 class="text-truncate oneline">
+     gl_FragCoord的xyzw
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       02-13
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1327
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/llimite/article/details/55050188" target="_blank" title="gl_FragCoord的xyzw">
+     <span class="desc oneline">
+      gl_FragCoord.xy代表屏幕的坐標，以分辨率800*600為例窗口，左下角(0,0)Windows(0,600)。則gl_FragCoord.xy為vec2(0.5，0.5)；右上角(1,1...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/llimite" target="_blank">
+      来自：
+      <span class="blog_title">
+       llimite的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/Taily_Duan/article/details/80731972","strategy":"BlogCommendFromBaidu","index":"7"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/Taily_Duan/article/details/80731972" target="_blank" title="【OpenGL】opengl shader内置变量和函数">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      OpenGL
+     </em>
+     】
+     <em>
+      opengl
+     </em>
+     shader内置变量和函数
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       06-19
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          822
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/Taily_Duan/article/details/80731972" target="_blank" title="【OpenGL】opengl shader内置变量和函数">
+     <span class="desc oneline">
+      1、uintCreateShader(enumtype):创建空的shaderobject;   type:VERTEX_SHADER,2、voidShaderSource(uintshader,si...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/Taily_Duan" target="_blank">
+      来自：
+      <span class="blog_title">
+       Taily老段的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/jiangcaiyang123/article/details/45062525","strategy":"BlogCommendFromBaidu","index":"8"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/jiangcaiyang123/article/details/45062525" target="_blank" title="有关GLSL中的gl_FragCoord">
+    <h4 class="text-truncate oneline">
+     有关GLSL中的gl_FragCoord
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       04-15
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          5406
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/jiangcaiyang123/article/details/45062525" target="_blank" title="有关GLSL中的gl_FragCoord">
+     <span class="desc oneline">
+      在研究阴影映射的时候，我发现了一个很有意思的变量，它可以代替我们自己使用的varying变量，给我们带来方便。但是我们也需要了解它是如何计算的。...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/jiangcaiyang123" target="_blank">
+      来自：
+      <span class="blog_title">
+       开发游戏，辉煌全中国
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/80899013","strategy":"BlogCommendFromBaidu","index":"9"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/80899013" target="_blank" title="【一步步学OpenGL 30】 -《曲面细分基础》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     30】 -《曲面细分基础》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       07-03
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          2965
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/80899013" target="_blank" title="【一步步学OpenGL 30】 -《曲面细分基础》">
+     <span class="desc oneline">
+      教程30曲面细分基础原文：http://ogldev.atspace.co.uk/www/tutorial30/tutorial30.htmlangie完整版专栏：http://blog.angie.ne...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/71056784","strategy":"BlogCommendFromMachineLearnPai2","index":"10"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/71056784" target="_blank" title="【一步步学OpenGL 27】 -《公告牌技术与几何着色器》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     27】 -《公告牌技术与几何
+     <em>
+      着色器
+     </em>
+     》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       05-01
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          3656
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/71056784" target="_blank" title="【一步步学OpenGL 27】 -《公告牌技术与几何着色器》">
+     <span class="desc oneline">
+      教程27公告牌技术与几何着色器原文：http://ogldev.atspace.co.uk/www/tutorial27/tutorial27.htmlangie完整版专栏：http://blog.cs...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box blog-expert-recommend-box">
+  <div class="d-flex">
+   <div class="blog-expert-recommend">
+    <div class="blog-expert">
+     <div class="blog-expert-flexbox">
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/beautyleaf/article/details/51850963","strategy":"BlogCommendFromMachineLearnPai2","index":"11"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/beautyleaf/article/details/51850963" target="_blank" title="opengl编程一(使用着色器)">
+    <h4 class="text-truncate oneline">
+     <em>
+      opengl
+     </em>
+     编程一(使用
+     <em>
+      着色器
+     </em>
+     )
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       07-07
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          6336
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/beautyleaf/article/details/51850963" target="_blank" title="opengl编程一(使用着色器)">
+     <span class="desc oneline">
+      openglopengl简介gl是一套图形编程API，是图形应用开发的工业标准接口，每个平台都有相应的实现。可视化的操作系统都提供了图形编程接口，通常这一系列的接口作为操作系统的一个系统服务，为客户提...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/beautyleaf" target="_blank">
+      来自：
+      <span class="blog_title">
+       追求游戏之道
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/huawenguang/article/details/2310038","strategy":"BlogCommendFromMachineLearnPai2","index":"12"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/huawenguang/article/details/2310038" target="_blank" title="Geometry Shader Concepts &amp; Examples">
+    <h4 class="text-truncate oneline">
+     Geometry Shader Concepts &amp; Examples
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       04-20
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          4184
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/huawenguang/article/details/2310038" target="_blank" title="Geometry Shader Concepts &amp; Examples">
+     <span class="desc oneline">
+      GeometryShaderConcepts&amp;Examples作者：周波from:http://www.cnblogs.com/Jedimaster/archive/2007/06/26/796107...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/huawenguang" target="_blank">
+      来自：
+      <span class="blog_title">
+       huawenguang的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/LYKymy/article/details/83039216","strategy":"BlogCommendFromMachineLearnPai2","index":"13"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/LYKymy/article/details/83039216" target="_blank" title="一步步学OpenGL-《着色器》代码问题">
+    <h4 class="text-truncate oneline">
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     -《
+     <em>
+      着色器
+     </em>
+     》代码问题
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-13
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          125
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/LYKymy/article/details/83039216" target="_blank" title="一步步学OpenGL-《着色器》代码问题">
+     <span class="desc oneline">
+      https://blog.angie.net/cordova/article/details/52495077根据上述博客所述问题，本人在测试的时候发现运行出现错误。在作者提供的代码中缺少readfil...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/LYKymy" target="_blank">
+      来自：
+      <span class="blog_title">
+       LYKymy的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/sinat_24998369/article/details/79868825","strategy":"BlogCommendFromBaidu","index":"14"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/sinat_24998369/article/details/79868825" target="_blank" title="OpenGL学习笔记二（着色器）">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     学习笔记二（
+     <em>
+      着色器
+     </em>
+     ）
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       04-09
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          849
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/sinat_24998369/article/details/79868825" target="_blank" title="OpenGL学习笔记二（着色器）">
+     <span class="desc oneline">
+      OpenGL的着色器语言（GLSL)ps：本篇大部分摘抄自LearnOpenGL在说OpenGL的着色器语言之前先来介绍一下着色器到底是个什么东西。在学unity3d的时候就听说有人说能写shader...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/sinat_24998369" target="_blank">
+      来自：
+      <span class="blog_title">
+       Love柒的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/dcrmg/article/details/53648306","strategy":"BlogCommendFromBaidu","index":"15"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/dcrmg/article/details/53648306" target="_blank" title="OpenGl中使用着色器的基本步骤及GLSL渲染简单示例">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGl
+     </em>
+     中使用
+     <em>
+      着色器
+     </em>
+     的基本步骤及GLSL渲染简单示例
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       12-14
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1万+
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/dcrmg/article/details/53648306" target="_blank" title="OpenGl中使用着色器的基本步骤及GLSL渲染简单示例">
+     <span class="desc oneline">
+      OpenGL着色语言（OpenGLShadingLanguage，GLSL）是用来在OpenGL中着色编程的语言，是一种具有C/C++风格的高级过程语言，同样也以main函数开始，只不过执行是在GPU...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/dcrmg" target="_blank">
+      来自：
+      <span class="blog_title">
+       牧野的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/qwtangwenqiang/article/details/83475253","strategy":"BlogCommendFromBaidu","index":"16"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/qwtangwenqiang/article/details/83475253" target="_blank" title="OpenGL-着色器">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     -
+     <em>
+      着色器
+     </em>
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-28
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          272
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/qwtangwenqiang/article/details/83475253" target="_blank" title="OpenGL-着色器">
+     <span class="desc oneline">
+      OpenGL-着色器定义GLSL典型结构数据类型输入与输出Uniform多属性着色器自定义着色器类定义着色器(Shader)是运行在GPU上的小程序。这些小程序为图形渲染管线的某个特定部分而运行。从基...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/qwtangwenqiang" target="_blank">
+      来自：
+      <span class="blog_title">
+       笃笃前行的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/qq_36391075/article/details/81514155","strategy":"BlogCommendFromBaidu","index":"17"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/qq_36391075/article/details/81514155" target="_blank" title="OpenGL学习之着色器与渲染管线">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     学习之
+     <em>
+      着色器
+     </em>
+     与渲染管线
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       08-08
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          439
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/qq_36391075/article/details/81514155" target="_blank" title="OpenGL学习之着色器与渲染管线">
+     <span class="desc oneline">
+      OpenGL学习之着色器与渲染管线看此篇之前，请看https://blog.angie.net/qq_36391075/article/details/81510754着色器与渲染管线渲染管线一般是有显...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/qq_36391075" target="_blank">
+      来自：
+      <span class="blog_title">
+       小薇子的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/yadong_mail/article/details/78305706","strategy":"BlogCommendFromBaidu","index":"18"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/yadong_mail/article/details/78305706" target="_blank" title="Shader学习（裁剪面）">
+    <h4 class="text-truncate oneline">
+     Shader学习（裁剪面）
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-21
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          601
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/yadong_mail/article/details/78305706" target="_blank" title="Shader学习（裁剪面）">
+     <span class="desc oneline">
+      本博客主要针对《CGProgramminginUnity》进行部分重点翻译，希望降低读者的阅读难度，方便快速查阅相关内容，让初学者的重心放在学习技术上，针对某些难懂的点进行解释，方便大家理解。...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/yadong_mail" target="_blank">
+      来自：
+      <span class="blog_title">
+       Coding My Life
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/newQIanMo/article/details/68946356","strategy":"BlogCommendFromBaidu","index":"19"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/newQIanMo/article/details/68946356" target="_blank" title="Unity-使用Shader裁剪图片">
+    <h4 class="text-truncate oneline">
+     Unity-使用Shader裁剪图片
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       04-01
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          2951
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/newQIanMo/article/details/68946356" target="_blank" title="Unity-使用Shader裁剪图片">
+     <span class="desc oneline">
+      原文：http://www.tuicool.com/articles/FziyEv在unity中，使用一张正方形的图片，但是要显示成圆形。这样怎么做呢？1、首先，新建一个shader：Circular...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/newQIanMo" target="_blank">
+      来自：
+      <span class="blog_title">
+       newQIanMo的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/imxiangzi/article/details/52650488","strategy":"BlogCommendFromBaidu","index":"20"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/imxiangzi/article/details/52650488" target="_blank" title="OpenGL4.x + QT 不错的选择">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     4.x + QT 不错的选择
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-24
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          2285
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/imxiangzi/article/details/52650488" target="_blank" title="OpenGL4.x + QT 不错的选择">
+     <span class="desc oneline">
+      http://blog.angie.net/gamesdev/article/details/18986265新的一年到了，在这里祝愿大家马到成功！      去年学习了一些GLSL的知识，主要是Ope...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/imxiangzi" target="_blank">
+      来自：
+      <span class="blog_title">
+       imxiangzi的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/LuckyJan/article/details/13062","strategy":"BlogCommendFromBaidu","index":"21"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/LuckyJan/article/details/13062" target="_blank" title="Delphi与Word（一）合并Word 表格中单元格">
+    <h4 class="text-truncate oneline">
+     Delphi与Word（一）合并Word 表格中单元格
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       06-04
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          2130
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/LuckyJan/article/details/13062" target="_blank" title="Delphi与Word（一）合并Word 表格中单元格">
+     <span class="desc oneline">
+      //合并Word表格中单元格proceduremergeWordCell;varWordApp:TWordApplication;???WordDoc:TWordDocument;???DocInx,...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/LuckyJan" target="_blank">
+      来自：
+      <span class="blog_title">
+       迷茫
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52878110","strategy":"BlogCommendFromBaidu","index":"22"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52878110" target="_blank" title="【一步步学OpenGL 17】 -《环境光》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     17】 -《环境光》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-20
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          6314
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52878110" target="_blank" title="【一步步学OpenGL 17】 -《环境光》">
+     <span class="desc oneline">
+      教程17环境光原文：http://ogldev.atspace.co.uk/www/tutorial16/tutorial16.htmlangie完整版专栏：http://blog.angie.net/c...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/weixin_40163154/article/details/84554219","strategy":"BlogCommendFromBaidu","index":"23"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/weixin_40163154/article/details/84554219" target="_blank" title="【一步步学OpenGL】">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     】
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       11-26
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          73
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/weixin_40163154/article/details/84554219" target="_blank" title="【一步步学OpenGL】">
+     <span class="desc oneline">
+      angie完整版专栏：http://blog.angie.net/column/details/13062.html
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/weixin_40163154" target="_blank">
+      来自：
+      <span class="blog_title">
+       weixin_40163154的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box recommend-download-box clearfix" data-report-click='{"mod":"popu_614","dest":"https://download.angie.net/download/zgy_mail/10305683","strategy":"BlogCommendFromBaidu","index":"24"}'>
+  <a href="https://download.angie.net/download/zgy_mail/10305683" target="_blank">
+   <div class="content clearfix">
+    <div class="">
+     <h4 class="text-truncate oneline clearfix">
+      <em>
+       OpenGL
+      </em>
+      入门教程（高清完整）
+     </h4>
+     <span class="data float-right">
+      03-24
+     </span>
+    </div>
+    <div class="desc oneline">
+     这本书在同样类型的书籍中排行靠前，所以推荐大家一看。
+    </div>
+    <span class="type-show type-show-download">
+     下载
+    </span>
+   </div>
+  </a>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52564074","strategy":"BlogCommendFromBaidu","index":"25"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52564074" target="_blank" title="【一步步学OpenGL 10】 -《索引绘制》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     10】 -《索引绘制》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-17
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          5723
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52564074" target="_blank" title="【一步步学OpenGL 10】 -《索引绘制》">
+     <span class="desc oneline">
+      教程10索引绘制背景OpenGL提供了几个绘制函数，其中我们之前使用的glDrawArrays()属于顺序绘制的一个函数。顺序绘制是从指定的偏移量依次扫描顶点缓冲区所有图元的每一个顶点，这样很简单易用...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/68962552","strategy":"BlogCommendFromBaidu","index":"26"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/68962552" target="_blank" title="【一步步学OpenGL 26】-《法线贴图》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     26】-《法线贴图》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       04-03
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          6626
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/68962552" target="_blank" title="【一步步学OpenGL 26】-《法线贴图》">
+     <span class="desc oneline">
+      教程26法线贴图原文：http://ogldev.atspace.co.uk/www/tutorial26/tutorial26.htmlangie完整版专栏：http://blog.angie.net/...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box recommend-download-box clearfix" data-report-click='{"mod":"popu_614","dest":"https://download.angie.net/download/jean7155/10150803","strategy":"BlogCommendFromBaidu","index":"27"}'>
+  <a href="https://download.angie.net/download/jean7155/10150803" target="_blank">
+   <div class="content clearfix">
+    <div class="">
+     <h4 class="text-truncate oneline clearfix">
+      <em>
+       一步步
+      </em>
+      学
+      <em>
+       OpenGL
+      </em>
+      源代码下载
+     </h4>
+     <span class="data float-right">
+      12-08
+     </span>
+    </div>
+    <div class="desc oneline">
+     想改一下资源分~！资源共享，不需要这么多分啊！帮我改到 1分、2分就够了！ angie里有一个专栏教程：一步步学OpenGL， 极客学院里面有一个教程：现代 OpenGL 教程 都是翻译的一个外文网站的
+    </div>
+    <span class="type-show type-show-download">
+     下载
+    </span>
+   </div>
+  </a>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52491762","strategy":"BlogCommendFromBaidu","index":"28"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52491762" target="_blank" title="【一步步学OpenGL 2】-《你好顶点》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     2】-《你好顶点》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-10
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          2万+
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52491762" target="_blank" title="【一步步学OpenGL 2】-《你好顶点》">
+     <span class="desc oneline">
+      你好顶点原文:http://ogldev.atspace.co.uk/www/tutorial02/tutorial02.html背景这里要第一次开始使用GLEW（theOpenGLExtension...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/53350395","strategy":"BlogCommendFromBaidu","index":"29"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/53350395" target="_blank" title="【一步步学OpenGL 22】 -《OpenGL使用Assimp库导入3d模型》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     22】 -《
+     <em>
+      OpenGL
+     </em>
+     使用Assimp库导入3d模型》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       11-26
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          9045
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/53350395" target="_blank" title="【一步步学OpenGL 22】 -《OpenGL使用Assimp库导入3d模型》">
+     <span class="desc oneline">
+      教程22OpenGL使用Assimp库导入3d模型原文：http://ogldev.atspace.co.uk/www/tutorial22/tutorial22.htmlangie完整版专栏：http...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cordova/article/details/52825859","strategy":"BlogCommendFromBaidu","index":"30"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cordova/article/details/52825859" target="_blank" title="【一步步学OpenGL 16】 -《纹理贴图》">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      一步步
+     </em>
+     学
+     <em>
+      OpenGL
+     </em>
+     16】 -《纹理贴图》
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-15
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1万+
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cordova/article/details/52825859" target="_blank" title="【一步步学OpenGL 16】 -《纹理贴图》">
+     <span class="desc oneline">
+      教程16纹理贴图基础原文：http://ogldev.atspace.co.uk/www/tutorial16/tutorial16.htmlangie完整版专栏：http://blog.angie.ne...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cordova" target="_blank">
+      来自：
+      <span class="blog_title">
+       Mr_厚厚的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/cp790621656/article/details/48326737","strategy":"BlogCommendFromBaidu","index":"31"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/cp790621656/article/details/48326737" target="_blank" title="OpenGL中的 glVertexAttribPointer 规格化 数据">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     中的 glVertexAttribPointer 规格化 数据
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-09
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          3710
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/cp790621656/article/details/48326737" target="_blank" title="OpenGL中的 glVertexAttribPointer 规格化 数据">
+     <span class="desc oneline">
+      OpenGL中的glVertexAttribPointer规格化数据。在Shader中，颜色值是用0-1的范围来表示的。一般我们用unsignedchar来表示一个颜色，比如unsignedcharr...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/cp790621656" target="_blank">
+      来自：
+      <span class="blog_title">
+       Hello Captain
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/v_xchen_v/article/details/80338056","strategy":"BlogCommendFromBaidu","index":"32"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/v_xchen_v/article/details/80338056" target="_blank" title="【译】【PyOpenGL教程-介绍着色器】 attribute变量（补间动画）">
+    <h4 class="text-truncate oneline">
+     【译】【Py
+     <em>
+      OpenGL
+     </em>
+     教程-介绍
+     <em>
+      着色器
+     </em>
+     】 attribute变量（补间动画）
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       05-16
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          326
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/v_xchen_v/article/details/80338056" target="_blank" title="【译】【PyOpenGL教程-介绍着色器】 attribute变量（补间动画）">
+     <span class="desc oneline">
+      属性值（实现补间动画）原文地址：http://pyopengl.sourceforge.net/context/tutorials/shader_4.html本教程构建在往期教程的基础之上新增了：在着...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/v_xchen_v" target="_blank">
+      来自：
+      <span class="blog_title">
+       赞美月亮的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/u013898698/article/details/75222893","strategy":"BlogCommendFromBaidu","index":"33"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/u013898698/article/details/75222893" target="_blank" title="着色器">
+    <h4 class="text-truncate oneline">
+     <em>
+      着色器
+     </em>
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       07-17
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          241
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/u013898698/article/details/75222893" target="_blank" title="着色器">
+     <span class="desc oneline">
+      背景从本教程中，我们将实现使用着色器完成每一个效果和技术。着色器是3D图形的现代化方式。在某种程度上，您可以声称这是一个退后步骤，因为固定功能管道提供的大多数3D功能，并且要求开发人员仅指定配置参数（...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/u013898698" target="_blank">
+      来自：
+      <span class="blog_title">
+       建建的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/caoshangpa/article/details/53455411","strategy":"BlogCommendFromBaidu","index":"34"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/caoshangpa/article/details/53455411" target="_blank" title="OpenGL着色器介绍">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     <em>
+      着色器
+     </em>
+     介绍
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       12-04
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          3585
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/caoshangpa/article/details/53455411" target="_blank" title="OpenGL着色器介绍">
+     <span class="desc oneline">
+      本文主要介绍如何使用OpenGL实现着色器程序，首先会简单介绍着色器在OpenGL渲染管线中是什么个位置，接着是介绍可以通过GLSL语言实现的两类着色器：顶点着色器和片段着色器，最后使用OpenGL实...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/caoshangpa" target="_blank">
+      来自：
+      <span class="blog_title">
+       灿哥哥的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/qq_41631051/article/details/93358442","strategy":"BlogCommendFromBaidu","index":"35"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/qq_41631051/article/details/93358442" target="_blank" title="OpenGL学习之着色器详解">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     学习之
+     <em>
+      着色器
+     </em>
+     详解
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       06-23
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          45
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/qq_41631051/article/details/93358442" target="_blank" title="OpenGL学习之着色器详解">
+     <span class="desc oneline">
+      OpenGL着色器语言（GLSL）看上去很像C语言，它由OpenGL实现进行编译和连接，并且（经常是）完全在图形硬件中运行。我们有顶点着色器、片段着色器和几何着色器，前两种是必需的，后一种是可选的。有...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/qq_41631051" target="_blank">
+      来自：
+      <span class="blog_title">
+       Estelle
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/wudiliyao/article/details/80203605","strategy":"BlogCommendFromBaidu","index":"36"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/wudiliyao/article/details/80203605" target="_blank" title="OpenGL着色器程序解析--第一个三角形">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     <em>
+      着色器
+     </em>
+     程序解析--第一个三角形
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       05-05
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          742
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/wudiliyao/article/details/80203605" target="_blank" title="OpenGL着色器程序解析--第一个三角形">
+     <span class="desc oneline">
+      转载至：https://blog.angie.net/cordova/article/details/52494549背景这篇教程非常简短，我们只是扩展前一个教程来渲染一个三角形。 这篇教程中我们依然使...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/wudiliyao" target="_blank">
+      来自：
+      <span class="blog_title">
+       wudiliyao的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/yueyue200830/article/details/88071644","strategy":"BlogCommendFromBaidu","index":"37"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/yueyue200830/article/details/88071644" target="_blank" title="新版OpenGL学习入门（三）——对着色器的一些理解">
+    <h4 class="text-truncate oneline">
+     新版
+     <em>
+      OpenGL
+     </em>
+     学习入门（三）——对
+     <em>
+      着色器
+     </em>
+     的一些理解
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       03-02
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          238
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/yueyue200830/article/details/88071644" target="_blank" title="新版OpenGL学习入门（三）——对着色器的一些理解">
+     <span class="desc oneline">
+      在写完OpenGL项目后，再次回顾并总结一下用到的一些知识。注意此博文可能需要先入门，否则可能有些难懂我做了一个简易的皮卡丘版的跳一跳，有兴趣的可以看一下我的Github：JumpingPikachu...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/yueyue200830" target="_blank">
+      来自：
+      <span class="blog_title">
+       yueyue200830的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/wudiliyao/article/details/80750424","strategy":"BlogCommendFromBaidu","index":"38"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/wudiliyao/article/details/80750424" target="_blank" title="OpenGL着色器程序解析--点光源">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     <em>
+      着色器
+     </em>
+     程序解析--点光源
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       06-20
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          197
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/wudiliyao/article/details/80750424" target="_blank" title="OpenGL着色器程序解析--点光源">
+     <span class="desc oneline">
+      背景之前已经学习了三个基本的光照模型（环境光，漫射光和镜面反射光），这三种模型都是基于平行光的。平行光只是通过一个向量来表示，没有光源起点，因此它不会随着距离的增大而衰减（实际上没有起点根本无法定义光...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/wudiliyao" target="_blank">
+      来自：
+      <span class="blog_title">
+       wudiliyao的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/wcl0617/article/details/73230346","strategy":"BlogCommendFromBaidu","index":"39"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/wcl0617/article/details/73230346" target="_blank" title="OpenGL着色器使用流程">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     <em>
+      着色器
+     </em>
+     使用流程
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       06-14
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1346
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/wcl0617/article/details/73230346" target="_blank" title="OpenGL着色器使用流程">
+     <span class="desc oneline">
+      着色器使用流程整个着色器的使用流程如下：1，创建着色器对象2，把源码关联到每个着色器对象3，编译着色器4，创建程序5，关联着色器到程序对象6，链接程序7，激活和关闭着色器程序8，删除着色器和程序1，创...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/wcl0617" target="_blank">
+      来自：
+      <span class="blog_title">
+       Cong的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/Aidam_Bo/article/details/84143259","strategy":"BlogCommendFromBaidu","index":"40"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/Aidam_Bo/article/details/84143259" target="_blank" title="Learn OpenGL（三）——顶点着色器（Vertext Shader）">
+    <h4 class="text-truncate oneline">
+     Learn
+     <em>
+      OpenGL
+     </em>
+     （三）——顶点
+     <em>
+      着色器
+     </em>
+     （Vertext Shader）
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       11-16
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          198
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/Aidam_Bo/article/details/84143259" target="_blank" title="Learn OpenGL（三）——顶点着色器（Vertext Shader）">
+     <span class="desc oneline">
+      顶点着色器是几个着色器中的一个，它是可编程的。现代OpenGL需要我们至少设置一个顶点着色器和一个片段着色器，如果我们打算做渲染的话。我们会简要介绍一下着色器以及配置两个非常简单的着色器来绘制...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/Aidam_Bo" target="_blank">
+      来自：
+      <span class="blog_title">
+       YBAdiam的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/nimeghbia/article/details/77774794","strategy":"BlogCommendFromBaidu","index":"41"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/nimeghbia/article/details/77774794" target="_blank" title="OpenGL ES 2.0——顶点着色器Vertex Shader">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     ES 2.0——顶点
+     <em>
+      着色器
+     </em>
+     Vertex Shader
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       09-01
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          598
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/nimeghbia/article/details/77774794" target="_blank" title="OpenGL ES 2.0——顶点着色器Vertex Shader">
+     <span class="desc oneline">
+      http://blog.angie.net/linshuhe1/article/details/51075783在上篇文章中，我们提到了OpenGLES2.0中的两个非常重要的着色器，它们分别是顶点着色...
+     </span>
+    </a>
+    <span class="blog_title_box oneline no-title">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/iEearth/article/details/78334300","strategy":"BlogCommendFromBaidu","index":"42"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/iEearth/article/details/78334300" target="_blank" title="【OpenGL ES】顶点着色器">
+    <h4 class="text-truncate oneline">
+     【
+     <em>
+      OpenGL
+     </em>
+     ES】顶点
+     <em>
+      着色器
+     </em>
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       10-24
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1692
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/iEearth/article/details/78334300" target="_blank" title="【OpenGL ES】顶点着色器">
+     <span class="desc oneline">
+      1、输入输出顶点着色器可用于传统的基于顶点操作，例如通过矩阵变换位置、计算照明方程式以生成逐顶点的颜色以及生成或者变换纹理坐标。顶点着色器的输入、输出如下图所示。输入变量或属性：用顶点数组提供的逐顶点...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/iEearth" target="_blank">
+      来自：
+      <span class="blog_title">
+       evo
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/sinat_22657459/article/details/89888244","strategy":"BlogCommendFromBaidu","index":"43"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/sinat_22657459/article/details/89888244" target="_blank" title="Opengl ES系列学习--顶点着色器">
+    <h4 class="text-truncate oneline">
+     <em>
+      Opengl
+     </em>
+     ES系列学习--顶点
+     <em>
+      着色器
+     </em>
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       05-07
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          81
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/sinat_22657459/article/details/89888244" target="_blank" title="Opengl ES系列学习--顶点着色器">
+     <span class="desc oneline">
+      本节我们继续来看一下《OPENGLES3.0编程指南原书第2版（中文版）》书中第8章的内容，PDF下载地址：OPENGLES3.0编程指南原书第2版（中文版），代码下载地址：OpenglESSourc...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/sinat_22657459" target="_blank">
+      来自：
+      <span class="blog_title">
+       红旺永福
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/weixin_38401090/article/details/89107574","strategy":"BlogCommendFromBaidu","index":"44"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/weixin_38401090/article/details/89107574" target="_blank" title="OpenGL： 着色器类实现（顶点着色器，片段着色器）">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     ：
+     <em>
+      着色器
+     </em>
+     类实现（顶点
+     <em>
+      着色器
+     </em>
+     ，片段
+     <em>
+      着色器
+     </em>
+     ）
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       04-08
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          95
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/weixin_38401090/article/details/89107574" target="_blank" title="OpenGL： 着色器类实现（顶点着色器，片段着色器）">
+     <span class="desc oneline">
+      注意：此着色器类，将顶点着色器与片段着色器一起实现，如需分开，还需自行拆分。头文件：#ifndefSHADER_H#defineSHADER_H#include&amp;lt;glad/glad.h&amp;gt;#...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/weixin_38401090" target="_blank">
+      来自：
+      <span class="blog_title">
+       weixin_38401090的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/qq_36391075/article/details/81510754","strategy":"BlogCommendFromBaidu","index":"45"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/qq_36391075/article/details/81510754" target="_blank" title="OpenGL学习之着色器语言">
+    <h4 class="text-truncate oneline">
+     <em>
+      OpenGL
+     </em>
+     学习之
+     <em>
+      着色器
+     </em>
+     语言
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       08-08
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          1379
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/qq_36391075/article/details/81510754" target="_blank" title="OpenGL学习之着色器语言">
+     <span class="desc oneline">
+      着色器语言OpenGLES着色器语言是一种高级的图形编辑语言，主要特性：1.OpenGLES着色器语言是一种高级的过程语言2.对顶点着色器，片元着色器使用的是同样的语言，不做区分3.基于C/C++的语...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/qq_36391075" target="_blank">
+      来自：
+      <span class="blog_title">
+       小薇子的博客
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box recommend-other-item-box" data-report-click='{"mod":"popu_614","dest":"https://bbs.angie.net/topics/392292862","strategy":"BlogCommendFromBaidu","index":"46"}'>
+  <a href="https://bbs.angie.net/topics/392292862" target="_blank">
+   <h4 class="text-truncate oneline">
+    怎么在顶点
+    <em>
+     着色器
+    </em>
+    里面计算顶点坐标对应的屏幕坐标? 就是片元里的gl_FragCoord
+   </h4>
+   <div class="info-box d-flex align-content-center">
+    <span class="date">
+     11-30
+    </span>
+   </div>
+   <p class="content oneline">
+    <span class="desc oneline">
+     怎么在顶点着色器里面计算顶点坐标对应的屏幕坐标? 就是片元里的gl_FragCoord
+    </span>
+    <span class="type-show type-show-bbs">
+     论坛
+    </span>
+   </p>
+  </a>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/yinghualuo000/article/details/52151854","strategy":"BlogCommendFromBaidu","index":"47"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/yinghualuo000/article/details/52151854" target="_blank" title="opengl顶点着色器">
+    <h4 class="text-truncate oneline">
+     <em>
+      opengl
+     </em>
+     顶点
+     <em>
+      着色器
+     </em>
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       08-08
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          221
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/yinghualuo000/article/details/52151854" target="_blank" title="opengl顶点着色器">
+     <span class="desc oneline">
+      顶点着色器的的概括    Attribute——属性，顶点矩阵支持的per_vertext数据   Uniforms——顶点着色器使用的常量数据   Samples——被常量数据使用的特殊类型，在顶点...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/yinghualuo000" target="_blank">
+      来自：
+      <span class="blog_title">
+       yinghualuo000的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/wanglang3081/article/details/8732237","strategy":"BlogCommendFromBaidu","index":"48"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/wanglang3081/article/details/8732237" target="_blank" title="[OpenGL ES 02]OpenGL ES渲染管线与着色器">
+    <h4 class="text-truncate oneline">
+     [
+     <em>
+      OpenGL
+     </em>
+     ES 02]
+     <em>
+      OpenGL
+     </em>
+     ES渲染管线与
+     <em>
+      着色器
+     </em>
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       03-28
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          754
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/wanglang3081/article/details/8732237" target="_blank" title="[OpenGL ES 02]OpenGL ES渲染管线与着色器">
+     <span class="desc oneline">
+      [OpenGLES02]OpenGLES渲染管线与着色器 罗朝辉(http://blog.angie.net/kesalin)本文遵循“署名-非商业用途-保持一致”创作公用协议前言在前文《[OpenGL...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/wanglang3081" target="_blank">
+      来自：
+      <span class="blog_title">
+       wanglang3081的专栏
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_blog clearfix" data-report-click='{"mod":"popu_614","dest":"https://blog.angie.net/pherit012/article/details/84598066","strategy":"BlogCommendFromBaidu","index":"49"}'>
+  <div class="content">
+   <a href="https://blog.angie.net/pherit012/article/details/84598066" target="_blank" title="5. cocos-2dx Shader(一) 着色器和GLSL">
+    <h4 class="text-truncate oneline">
+     5. cocos-2dx Shader(一)
+     <em>
+      着色器
+     </em>
+     和GLSL
+    </h4>
+    <div class="info-box d-flex align-content-center">
+     <p class="date-and-readNum oneline">
+      <span class="date hover-show">
+       05-10
+      </span>
+      <span class="read-num hover-hide">
+       阅读数 
+          85
+      </span>
+     </p>
+    </div>
+   </a>
+   <p class="content">
+    <a href="https://blog.angie.net/pherit012/article/details/84598066" target="_blank" title="5. cocos-2dx Shader(一) 着色器和GLSL">
+     <span class="desc oneline">
+      在移动游戏中，GPU大部分时间都是闲着的，而我们很多时刻可以直接来操作[b]着色器[/b]在屏幕上的显示来节约我们的图片资源，容量以及内存等等。[b]着色器[/b]着色器（英语：shader）应用于计...
+     </span>
+    </a>
+    <span class="blog_title_box oneline">
+     <span class="type-show type-show-blog type-show-after">
+      博文
+     </span>
+     <a href="https://blog.angie.net/pherit012" target="_blank">
+      来自：
+      <span class="blog_title">
+       中苑
+      </span>
+     </a>
+    </span>
+   </p>
+  </div>
+ </div>
+ <div class="recommend-item-box type_hot_word">
+  <div class="content clearfix">
+   <div class="word float-left">
+    <span>
+     <a href="https://edu.angie.net/courses/o5329_s5330_k " target="_blank">
+      机器学习教程
+     </a>
+    </span>
+    <span>
+     <a href="https://edu.angie.net/courses/o280_s351_k " target="_blank">
+      Objective-C培训
+     </a>
+    </span>
+    <span>
+     <a href="https://edu.angie.net/combos/o7115_s388_l0_t " target="_blank">
+      交互设计视频教程
+     </a>
+    </span>
+    <span>
+     <a href="https://edu.angie.net/course/play/5599/104252 " target="_blank">
+      颜色模型
+     </a>
+    </span>
+    <span>
+     <a href="https://edu.angie.net/combos/o363_l0_t " target="_blank">
+      设计制作学习
+     </a>
+    </span>
+   </div>
+  </div>
+  <div class="content clearfix">
+   <div class="float-left">
+    <span>
+     <a href="https://www.angie.net/gather_24/MtTaEg3sMDM5MS1ibG9n.html" target="_blank">
+      mysql关联查询两次本表
+     </a>
+    </span>
+    <span>
+     <a href="https://www.angie.net/gather_10/MtjaIg3sMTUzMy1kb3dubG9hZAO0O0OO0O0O.html" target="_blank">
+      native底部 react
+     </a>
+    </span>
+    <span>
+     <a href="https://www.angie.net/gather_1b/Ntzagg1sOTU3LWRvd25sb2Fk.html" target="_blank">
+      extjs glyph 图标
+     </a>
+    </span>
+    <span>
+     <a href="https://www.angie.net/gather_4a/NtTakg2sMTEtZWR1.html" target="_blank">
+      java学习opengl
+     </a>
+    </span>
+    <span>
+     <a href="https://www.angie.net/gather_4a/MtzaAg5sMS1lZHUO0O0O.html" target="_blank">
+      opengl教程python
+     </a>
+    </span>
+   </div>
+  </div>
+ </div>
+ <div class="recommend-loading-box">
+  <img angie="https://angieimg.cn/release/phoenix/images/feedLoading.gif"/>
+ </div>
+ <div class="recommend-end-box">
+  <p class="text-center">
+   没有更多推荐了，
+   <a class="c-blue c-blue-hover c-blue-focus" href="https://blog.angie.net/">
+    返回首页
+   </a>
+  </p>
+ </div>
+</div>
+<aside>
+ <div class="aside-box" id="asideProfile">
+  <!-- <h3 class="aside-title">个人资料</h3> -->
+  <div class="profile-intro d-flex">
+   <div class="avatar-box d-flex justify-content-center flex-column">
+    <a href="https://blog.angie.net/cordova">
+     <img class="avatar_pic" angie="https://avatar.angie.net/C/0/E/3_cordova.jpg"/>
+     <img class="user-years" angie="https://g.angieimg.cn/static/user-reg-year/1x/4.png"/>
+    </a>
+   </div>
+   <div class="user-info d-flex justify-content-center flex-column">
+    <p class="name angie-tracking-statistics tracking-click" data-report-click='{"mod":"popu_379"}'>
+     <a class="" href="https://blog.angie.net/cordova" id="uid">
+      Mr_厚厚
+     </a>
+    </p>
+    <p class="flag expert">
+     <a href="https://blog.angie.net/home/help.html#classicfication" target="_blank">
+      <svg aria-hidden="true" class="icon">
+       <use xangie:href="#angiec-blogexpert">
+       </use>
+      </svg>
+      博客专家
+     </a>
+     <span class="bubble hide hideAnimate">
+      已认证的专家
+     </span>
+    </p>
+   </div>
+   <div class="opt-box d-flex justify-content-center flex-column">
+    <span class="angie-tracking-statistics tracking-click" data-report-click='{"mod":"popu_379"}'>
+     <a class="btn btn-sm btn-red-hollow attention" id="btnAttent">
+      关注
+     </a>
+    </span>
+   </div>
+  </div>
+  <div class="data-info d-flex item-tiling">
+   <dl class="text-center" title="98">
+    <dt>
+     <a href="https://blog.angie.net/cordova?t=1">
+      原创
+     </a>
+    </dt>
+    <dd>
+     <a href="https://blog.angie.net/cordova?t=1">
+      <span class="count">
+       98
+      </span>
+     </a>
+    </dd>
+   </dl>
+   <dl class="text-center" id="fanBox" title="802">
+    <dt>
+     粉丝
+    </dt>
+    <dd>
+     <span class="count" id="fan">
+      802
+     </span>
+    </dd>
+   </dl>
+   <dl class="text-center" title="370">
+    <dt>
+     喜欢
+    </dt>
+    <dd>
+     <span class="count">
+      370
+     </span>
+    </dd>
+   </dl>
+   <dl class="text-center" title="470">
+    <dt>
+     评论
+    </dt>
+    <dd>
+     <span class="count">
+      470
+     </span>
+    </dd>
+   </dl>
+  </div>
+  <div class="grade-box clearfix">
+   <dl>
+    <dt>
+     等级：
+    </dt>
+    <dd>
+     <a href="https://blog.angie.net/home/help.html#level" target="_blank" title="6级,点击查看等级说明">
+      <svg aria-hidden="true" class="icon icon-level">
+       <use xangie:href="#angiec-bloglevel-6">
+       </use>
+      </svg>
+     </a>
+    </dd>
+   </dl>
+   <dl>
+    <dt>
+     访问：
+    </dt>
+    <dd title="834436">
+     83万+
+    </dd>
+   </dl>
+   <dl>
+    <dt>
+     积分：
+    </dt>
+    <dd title="7591">
+     7591
+    </dd>
+   </dl>
+   <dl title="5224">
+    <dt>
+     排名：
+    </dt>
+    <dd>
+     5224
+    </dd>
+   </dl>
+  </div>
+  <div class="badge-box d-flex">
+   <span>
+    勋章：
+   </span>
+   <div class="badge d-flex">
+    <div class="icon-badge" title="GitHub">
+     <div class="mouse-box">
+      <img alt="" angie="https://g.angieimg.cn/static/user-medal/github.svg"/>
+      <div class="icon-arrow">
+      </div>
+     </div>
+     <div class="grade-detail-box">
+      <div class="pos-box">
+       <div class="left-box d-flex justify-content-center align-items-center flex-column">
+        <img alt="" angie="https://g.angieimg.cn/static/user-medal/github.svg"/>
+        <p>
+         GitHub
+        </p>
+       </div>
+       <div class="right-box">
+        绑定GitHub第三方账户获取
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="icon-badge" title="专栏达人">
+     <div class="mouse-box">
+      <img alt="" angie="https://g.angieimg.cn/static/user-medal/zhuanlan.svg"/>
+      <div class="icon-arrow">
+      </div>
+     </div>
+     <div class="grade-detail-box">
+      <div class="pos-box">
+       <div class="left-box d-flex justify-content-center align-items-center flex-column">
+        <img alt="" angie="https://g.angieimg.cn/static/user-medal/zhuanlan.svg"/>
+        <p>
+         专栏达人
+        </p>
+       </div>
+       <div class="right-box">
+        授予成功创建个人博客专栏的用户。专栏中添加五篇以上博文即可点亮！撰写博客专栏浓缩技术精华，专栏达人就是你！
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="icon-badge" title="持之以恒">
+     <div class="mouse-box">
+      <img alt="" angie="https://g.angieimg.cn/static/user-medal/chizhiyiheng.svg"/>
+      <div class="icon-arrow">
+      </div>
+     </div>
+     <div class="grade-detail-box">
+      <div class="pos-box">
+       <div class="left-box d-flex justify-content-center align-items-center flex-column">
+        <img alt="" angie="https://g.angieimg.cn/static/user-medal/chizhiyiheng.svg"/>
+        <p>
+         持之以恒
+        </p>
+       </div>
+       <div class="right-box">
+        授予每个自然月内发布4篇或4篇以上原创或翻译IT博文的用户。不积跬步无以至千里，不积小流无以成江海，程序人生的精彩需要坚持不懈地积累！
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <script>
+    (function ($) {
+                setTimeout(function(){
+                    $('div.icon-badge.show-moment').removeClass('show-moment');
+                }, 5000);
+            })(window.jQuery)
+   </script>
+  </div>
+  <div class="personal-home-page">
+   <a href="https://me.angie.net/cordova" target="_blank">
+    TA的个人主页 &gt;
+   </a>
+  </div>
+ </div>
+ <!--自定义模块-->
+ <div class="aside-box custom-box" id="asideCustom41805322">
+  <h3 class="aside-title">
+   关于我
+  </h3>
+  <div class="aside-content clearfix">
+   人生苦短，道阻且艰；修行不易，且行且努力。
+   <br/>
+   <br/>
+   【专业擅长领域】：iOS开发，游戏开发，图形学
+   <br/>
+   <br/>
+   【擅长平台】：iOS平台，Unity
+   <br/>
+   <a href="https://jiangxh1992.github.io">
+    <img angie="http://img.blog.angie.net/20161119232034959" width="100px"/>
+   </a>
+   <br/>
+   ---------------------------------------------------------
+   <br/>
+   【GitHub】：
+   <a href="https://github.com/jiangxh1992?tab=repositories">
+    jiangxh1992
+   </a>
+   <br/>
+   【邮箱】：jiangxinhou艾特outlook点com
+   <br/>
+   ---------------------------------------------------------
+   <br/>
+   【我的书：iOS程序员面试笔试宝典】
+   <br/>
+   <img angie="https://img-blog.angie.net/20180926111453726?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NvcmRvdmE=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"/>
+   <br/>
+   ---------------------------------------------------------
+   <br/>
+   京东/淘宝等搜索关键词打折预购中！
+   <br/>
+   ---------------------------------------------------------
+  </div>
+ </div>
+ <div class="aside-box" id="asideColumn">
+  <h3 class="aside-title">
+   博主专栏
+  </h3>
+  <div class="aside-content">
+   <ul class="column-box angie-tracking-statistics tracking-click" data-report-view='{"mod":"popu_520"}'>
+    <li class="clearfix">
+     <div class="img-box float-left">
+      <a class="d-flex align-items-center" href="https://blog.angie.net/cordova/column/info/13062">
+       <img alt="" angie="https://img-blog.angie.net/20160927095314593?imageView2/5/w/120/h/120"/>
+      </a>
+     </div>
+     <div class="info">
+      <p class="title">
+       <a href="https://blog.angie.net/cordova/column/info/13062">
+        一步步学OpenGL3.3+
+       </a>
+      </p>
+      <div class="data">
+       文章数：
+       <span class="count">
+        32 篇
+       </span>
+       访问量：
+       <span>
+        21万+
+       </span>
+      </div>
+     </div>
+    </li>
+    <li class="clearfix">
+     <div class="img-box float-left">
+      <a class="d-flex align-items-center" href="https://blog.angie.net/cordova/column/info/13086">
+       <img alt="" angie="https://img-blog.angie.net/20161120000615520?imageView2/5/w/120/h/120"/>
+      </a>
+     </div>
+     <div class="info">
+      <p class="title">
+       <a href="https://blog.angie.net/cordova/column/info/13086">
+        iOS沉思录
+       </a>
+      </p>
+      <div class="data">
+       文章数：
+       <span class="count">
+        55 篇
+       </span>
+       访问量：
+       <span>
+        14万+
+       </span>
+      </div>
+     </div>
+    </li>
+   </ul>
+  </div>
+ </div>
+ <div class="aside-box" id="asideNewArticle">
+  <h3 class="aside-title">
+   最新文章
+  </h3>
+  <div class="aside-content">
+   <ul class="inf_list clearfix angie-tracking-statistics tracking-click" data-mod="popu_382">
+    <li class="clearfix">
+     <a href="https://blog.angie.net/cordova/article/details/86668795" target="_blank">
+      游戏中的抗锯齿技术Anti-Alasing提炼总结
+     </a>
+    </li>
+    <li class="clearfix">
+     <a href="https://blog.angie.net/cordova/article/details/86668678" target="_blank">
+      True Impostor技术原理总结与实践
+     </a>
+    </li>
+    <li class="clearfix">
+     <a href="https://blog.angie.net/cordova/article/details/82945154" target="_blank">
+      Unity判断机型是否为iPhoneX，iPhoneXS，iPhoneXR，以及iPhoneXS Max
+     </a>
+    </li>
+    <li class="clearfix">
+     <a href="https://blog.angie.net/cordova/article/details/80899013" target="_blank">
+      【一步步学OpenGL 30】 -《曲面细分基础》
+     </a>
+    </li>
+    <li class="clearfix">
+     <a href="https://blog.angie.net/cordova/article/details/80712810" target="_blank">
+      用于Unity(windows\iOS\安卓)的纯C版LZMA压缩算法库（dll .so和.a）
+     </a>
+    </li>
+   </ul>
+  </div>
+ </div>
+ <div class="aside-box flexible-box" id="asideArchive">
+  <h3 class="aside-title">
+   归档
+  </h3>
+  <div class="aside-content">
+   <ul class="archive-list">
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2019/01">
+      2019年1月
+      <span class="count float-right">
+       2篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2018/10">
+      2018年10月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2018/07">
+      2018年7月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2018/06">
+      2018年6月
+      <span class="count float-right">
+       2篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2018/04">
+      2018年4月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2018/03">
+      2018年3月
+      <span class="count float-right">
+       2篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2018/02">
+      2018年2月
+      <span class="count float-right">
+       2篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/10">
+      2017年10月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/09">
+      2017年9月
+      <span class="count float-right">
+       3篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/07">
+      2017年7月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/06">
+      2017年6月
+      <span class="count float-right">
+       3篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/05">
+      2017年5月
+      <span class="count float-right">
+       4篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/04">
+      2017年4月
+      <span class="count float-right">
+       5篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/03">
+      2017年3月
+      <span class="count float-right">
+       4篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/02">
+      2017年2月
+      <span class="count float-right">
+       2篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2017/01">
+      2017年1月
+      <span class="count float-right">
+       8篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/12">
+      2016年12月
+      <span class="count float-right">
+       10篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/11">
+      2016年11月
+      <span class="count float-right">
+       11篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/10">
+      2016年10月
+      <span class="count float-right">
+       9篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/09">
+      2016年9月
+      <span class="count float-right">
+       18篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/08">
+      2016年8月
+      <span class="count float-right">
+       3篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/07">
+      2016年7月
+      <span class="count float-right">
+       3篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/06">
+      2016年6月
+      <span class="count float-right">
+       6篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/05">
+      2016年5月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/04">
+      2016年4月
+      <span class="count float-right">
+       5篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2016/03">
+      2016年3月
+      <span class="count float-right">
+       36篇
+      </span>
+     </a>
+    </li>
+    <!--归档统计-->
+    <li>
+     <a href="https://blog.angie.net/cordova/article/month/2015/09">
+      2015年9月
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+   </ul>
+  </div>
+  <p class="text-center">
+   <a class="btn btn-angie-blue flexible-btn" data-fbox="aside-archive">
+    展开
+   </a>
+  </p>
+ </div>
+ <div class="aside-box flexible-box" id="asideCategory">
+  <h3 class="aside-title">
+   个人分类
+  </h3>
+  <div class="aside-content">
+   <ul>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/5839407">
+      <span class="title oneline">
+       Unity3D
+      </span>
+      <span class="count float-right">
+       16篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6128968">
+      <span class="title oneline">
+       iOS开发
+      </span>
+      <span class="count float-right">
+       56篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6129028">
+      <span class="title oneline">
+       VR&amp;AR
+      </span>
+      <span class="count float-right">
+       2篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6128970">
+      <span class="title oneline">
+       数据结构与算法
+      </span>
+      <span class="count float-right">
+       6篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6129025">
+      <span class="title oneline">
+       HTML5
+      </span>
+      <span class="count float-right">
+       11篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6199455">
+      <span class="title oneline">
+       OpenGL3.3+
+      </span>
+      <span class="count float-right">
+       33篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6128969">
+      <span class="title oneline">
+       Cocos2d-x
+      </span>
+      <span class="count float-right">
+       7篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6128974">
+      <span class="title oneline">
+       安卓
+      </span>
+      <span class="count float-right">
+       4篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6205399">
+      <span class="title oneline">
+       软件／插件安装
+      </span>
+      <span class="count float-right">
+       7篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6128973">
+      <span class="title oneline">
+       其他
+      </span>
+      <span class="count float-right">
+       1篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6566874">
+      <span class="title oneline">
+       游戏开发与原理
+      </span>
+      <span class="count float-right">
+       16篇
+      </span>
+     </a>
+    </li>
+    <li>
+     <a class="clearfix" href="https://blog.angie.net/cordova/article/category/6569068">
+      <span class="title oneline">
+       图像处理与计算机视觉
+      </span>
+      <span class="count float-right">
+       5篇
+      </span>
+     </a>
+    </li>
+   </ul>
+  </div>
+  <p class="text-center">
+   <a class="btn btn-angie-blue flexible-btn" data-fbox="aside-archive">
+    展开
+   </a>
+  </p>
+ </div>
+ <div class="aside-box" id="asideHotArticle">
+  <h3 class="aside-title">
+   热门文章
+  </h3>
+  <div class="aside-content">
+   <ul class="hotArticle-list angie-tracking-statistics tracking-click" data-report-view='{"mod":"popu_521"}'>
+    <li>
+     <a href="https://blog.angie.net/cordova/article/details/50853415">
+      HTML5表单中password输入框的文字显示与隐藏实现
+     </a>
+     <p class="read">
+      阅读数
+      <span>
+       71867
+      </span>
+     </p>
+    </li>
+    <li>
+     <a href="https://blog.angie.net/cordova/article/details/50853451">
+      HTML5页面跳转的几种方法
+     </a>
+     <p class="read">
+      阅读数
+      <span>
+       29554
+      </span>
+     </p>
+    </li>
+    <li>
+     <a href="https://blog.angie.net/cordova/article/details/77986123">
+      【一步步学OpenGL 1】-《打开一个窗口》
+     </a>
+     <p class="read">
+      阅读数
+      <span>
+       24566
+      </span>
+     </p>
+    </li>
+    <li>
+     <a href="https://blog.angie.net/cordova/article/details/51607407">
+      游戏中的AI算法总结与改进
+     </a>
+     <p class="read">
+      阅读数
+      <span>
+       24040
+      </span>
+     </p>
+    </li>
+    <li>
+     <a href="https://blog.angie.net/cordova/article/details/52928432">
+      无损压缩经典算法
+     </a>
+     <p class="read">
+      阅读数
+      <span>
+       21497
+      </span>
+     </p>
+    </li>
+   </ul>
+  </div>
+ </div>
+ <div class="aside-box" id="asideNewComments">
+  <h3 class="aside-title">
+   最新评论
+  </h3>
+  <div class="aside-content">
+   <ul class="newcomment-list">
+    <li>
+     <a class="title text-truncate" href="https://blog.angie.net/cordova/article/details/64912680#comments" target="_blank">
+      在matlab上实现遗传算法解决T...
+     </a>
+     <p class="comment ellipsis">
+      <a class="user-name" href="https://my.angie.net/weixin_42600113" target="_blank">
+       weixin_42600113：
+      </a>
+      [reply]weixin_42600113[/reply]
+懂了，我没看到下面。。。。
+     </p>
+    </li>
+    <li>
+     <a class="title text-truncate" href="https://blog.angie.net/cordova/article/details/53206067#comments" target="_blank">
+      图像的基本有损压缩和无损压缩及解压
+     </a>
+     <p class="comment ellipsis">
+      <a class="user-name" href="https://my.angie.net/qq_34649170" target="_blank">
+       qq_34649170：
+      </a>
+      请问能加你个联系方式吗，有一个问题想请教您
+     </p>
+    </li>
+    <li>
+     <a class="title text-truncate" href="https://blog.angie.net/cordova/article/details/64912680#comments" target="_blank">
+      在matlab上实现遗传算法解决T...
+     </a>
+     <p class="comment ellipsis">
+      <a class="user-name" href="https://my.angie.net/weixin_42600113" target="_blank">
+       weixin_42600113：
+      </a>
+      菜鸟新手想问：generate是什么函数？？？
+     </p>
+    </li>
+    <li>
+     <a class="title text-truncate" href="https://blog.angie.net/cordova/article/details/52495077#comments" target="_blank">
+      【一步步学OpenGL 4】-《着...
+     </a>
+     <p class="comment ellipsis">
+      <a class="user-name" href="https://my.angie.net/weixin_42957241" target="_blank">
+       weixin_42957241：
+      </a>
+      怎么我生成.vs,.fs文本并放在.cpp根目录下，出来的效果还是白色？
+     </p>
+    </li>
+    <li>
+     <a class="title text-truncate" href="https://blog.angie.net/cordova/article/details/52491762#comments" target="_blank">
+      【一步步学OpenGL 2】-《你...
+     </a>
+     <p class="comment ellipsis">
+      <a class="user-name" href="https://my.angie.net/weixin_42957241" target="_blank">
+       weixin_42957241：
+      </a>
+      楼主，我运行时
+d:\360安全浏览器下载\ogldev-source\include\ogldev\ogldev_math_3d.h(30): fatal error C1083: 无法打开包括文件: “assimp/vector3.h”: No such file or directory
+我包含了assimp库了啊
+     </p>
+    </li>
+   </ul>
+  </div>
+ </div>
+ <div id="asideFooter">
+  <div class="aside-box">
+   <div class="persion_article">
+   </div>
+  </div>
+ </div>
+</aside>
+<script data-isfootertrack="false" angie="https://angieimg.cn/pubfooter/js/publib_footer-1.0.3.js" type="text/javascript">
+</script>
+<script>
+ $("a.flexible-btn").click(function(){
+    $(this).parents('div.aside-box').removeClass('flexible-box');
+    $(this).remove();
+  })
+</script>
+<div class="mask-dark">
+</div>
+<div class="tool-box vertical">
+ <ul class="meau-list">
+  <li class="btn-like-box long-width">
+   <button class="long-height hover-box btn-like" title="点赞">
+    <svg aria-hidden="true" class="icon active hover-hide">
+     <use xangie:href="#angiec-thumbsup-ok">
+     </use>
+    </svg>
+    <svg aria-hidden="true" class="icon no-active hover-hide">
+     <use xangie:href="#angiec-thumbsup">
+     </use>
+    </svg>
+    <span class="hover-show text-box text">
+     <span class="no-active">
+      点赞
+     </span>
+     <span class="active">
+      取消点赞
+     </span>
+    </span>
+    <p id="supportCount">
+     11
+    </p>
+   </button>
+  </li>
+  <li class="to-commentBox">
+   <a class="btn-comments long-height hover-box" href="#commentBox" title="写评论">
+    <svg aria-hidden="true" class="icon hover-hide">
+     <use xangie:href="#angiec-comments">
+     </use>
+    </svg>
+    <span class="hover-show text">
+     评论
+    </span>
+    <p class="">
+     47
+    </p>
+   </a>
+  </li>
+  <li class="toc-container-box" id="liTocBox">
+   <a class="btn-toc low-height hover-box btn-comments" title="目录">
+    <svg aria-hidden="true" class="icon hover-hide">
+     <use xangie:href="#angiec-contents">
+     </use>
+    </svg>
+    <span class="hover-show text">
+     目录
+    </span>
+   </a>
+   <div class="toc-container">
+    <div class="pos-box">
+     <div class="icon-arrow">
+     </div>
+     <div class="scroll-box">
+      <div class="toc-box">
+      </div>
+     </div>
+    </div>
+    <div class="opt-box">
+     <button class="btn-opt prev nomore" title="向上">
+      <svg aria-hidden="true" class="icon">
+       <use xangie:href="#angiec-chevronup">
+       </use>
+      </svg>
+     </button>
+     <button class="btn-opt next">
+      <svg aria-hidden="true" class="icon">
+       <use xangie:href="#angiec-chevrondown">
+       </use>
+      </svg>
+     </button>
+    </div>
+   </div>
+  </li>
+  <li>
+   <a class="btn-bookmark low-height hover-box btn-comments" title="收藏">
+    <svg aria-hidden="true" class="icon active hover-hide">
+     <use xangie:href="#angiec-bookmark-ok">
+     </use>
+    </svg>
+    <svg aria-hidden="true" class="icon no-active hover-hide">
+     <use xangie:href="#angiec-bookmark">
+     </use>
+    </svg>
+    <span class="hover-show text">
+     收藏
+    </span>
+    <!-- <span class="hover-show text-box text">
+          <span class="no-active">收藏</span>
+          <span class="active">取消收藏</span>
+        </span> -->
+   </a>
+  </li>
+  <li class="bdsharebuttonbox">
+   <div class="weixin-qr btn-comments low-height hover-box">
+    <a class="bds_weixin clear-share-style" data-cmd="weixin" href="#" title="手机看">
+    </a>
+    <svg aria-hidden="true" class="icon hover-hide">
+     <use xangie:href="#angiec-usephone">
+     </use>
+    </svg>
+    <span class="hover-show text text3">
+     手机看
+    </span>
+   </div>
+  </li>
+  <li class="widescreen-hide">
+   <a class="prev btn-comments low-height hover-box" href="https://blog.angie.net/cordova/article/details/52494549" title="【一步步学OpenGL 3】-《第一个三角形》">
+    <svg aria-hidden="true" class="icon hover-hide">
+     <use xangie:href="#angiec-chevronleft">
+     </use>
+    </svg>
+    <span class="hover-show text text3">
+     上一篇
+    </span>
+   </a>
+  </li>
+  <li class="widescreen-hide">
+   <a class="next btn-comments hover-box low-height" href="https://blog.angie.net/cordova/article/details/52504118" title="【一步步学OpenGL 5】-《一致变量Uniform Variables》">
+    <svg aria-hidden="true" class="icon hover-hide">
+     <use xangie:href="#angiec-chevronright">
+     </use>
+    </svg>
+    <span class="hover-show text text3">
+     下一篇
+    </span>
+   </a>
+  </li>
+  <!-- 宽屏更多按钮 -->
+  <li class="widescreen-more">
+   <a class="btn-comments chat-ask-button low-height hover-box" href="#chatqa" title="快问">
+    <svg aria-hidden="true" class="icon hover-hide">
+     <use xangie:href="#angiec-more">
+     </use>
+    </svg>
+    <span class="hover-show text">
+     更多
+    </span>
+   </a>
+   <ul class="widescreen-more-box">
+    <li class="widescreen-more">
+     <a class="btn-comments low-height hover-box" href="https://blog.angie.net/cordova/article/details/52494549" title="【一步步学OpenGL 3】-《第一个三角形》">
+      <svg aria-hidden="true" class="icon hover-hide">
+       <use xangie:href="#angiec-chevronleft">
+       </use>
+      </svg>
+      <span class="hover-show text text3">
+       上一篇
+      </span>
+     </a>
+    </li>
+    <li class="widescreen-more">
+     <a class="btn-comments hover-box low-height" href="https://blog.angie.net/cordova/article/details/52504118" title="【一步步学OpenGL 5】-《一致变量Uniform Variables》">
+      <svg aria-hidden="true" class="icon hover-hide">
+       <use xangie:href="#angiec-chevronright">
+       </use>
+      </svg>
+      <span class="hover-show text text3">
+       下一篇
+      </span>
+     </a>
+    </li>
+   </ul>
+  </li>
+ </ul>
+</div>
+<script angie="https://g.angieimg.cn/collection-box/1.1.2/collection-box.js?t=201908091" type="text/javascript">
+</script>
+
+<script angie="https://angieimg.cn/public/sandalstrap/1.4/js/sandalstrap.min.js">
+</script>
+<script angie="https://angieimg.cn/release/phoenix/vendor/pagination/paging-3d3b805766.js">
+</script>
+<div style="display:none;">
+ <img onerror='setTimeout(function(){if(!/(angie.net|iteye.com|baiducontent.com|googleusercontent.com|360webcache.com|sogoucdn.com|bingj.com|baidu.com)$/.test(window.location.hostname)){window.location.href="\x68\x74\x74\x70\x73\x3a\x2f\x2f\x77\x77\x77\x2e\x63\x73\x64\x6e\x2e\x6e\x65\x74"}},3000);' angie=""/>
+</div>
+<angie href="https://angieimg.cn/release/blog_editor_html/release1.4.3/ckeditor/plugins/codesnippet/lib/highlight/styles/atom-one-light.css" rel="stylesheet"/>
+<script angie="https://angieimg.cn/release/phoenix/production/pc_wap_common-f868939e52.js" type="text/javascript">
+</script>
+<script>
+ // 全局声明
+ if (window.angie === undefined) {
+      window.angie = {};
+    }
+    window.angie.sideToolbar = {
+        options: {
+            report:{
+                isShow: true,
+            },
+            afterFinished: function(){
+                setTimeout(function () {
+                    var viphtml = '<a class="option-box" data-type="vip" href="https://mall.angie.net/vip" target="_blank">'+
+                        '<img angie="https://g.angieimg.cn/side-toolbar/1.4/images/vip.png" alt="" angieset="">'+
+                        '<span class="show-txt">VIP<br>免广告</span>'+
+                        '</a>';
+                    $('.angie-side-toolbar').prepend(viphtml)
+                },300)
+            }
+        }
+    }
+
+    $(function(){
+        $(document).on('click',"a.option-box[data-type='report']",function() {
+            showReport(false,articleTitles)
+        });
+    })
+</script>
+<script angie="https://g.angieimg.cn/side-toolbar/1.4/side-toolbar.js">
+</script>
+<script angie="https://angieimg.cn/release/phoenix/template/js/common-2c5f1af91b.min.js">
+</script>
+<script angie="https://angieimg.cn/release/phoenix/template/js/detail-b6674debea.min.js">
+</script>
+<script angie="https://angieimg.cn/release/phoenix/themes/skin-yellow/skin-yellow-fc7383b956.min.js">
+</script>
+<script angie="//g.angieimg.cn/??login-box/1.0.6/login-box.js,login-box/1.0.7/login-auto.js,copyright/1.0.3/copyright.js,baidu-search/1.0.0/baidu-search.js?t=20190307095522" type="text/javascript">
+</script>
+<script angie="https://angieimg.cn/release/blog_mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript">
+</script>
+<script type="text/x-mathjax-config">
+ MathJax.Hub.Config({
+            "HTML-CSS": {
+                    linebreaks: { automatic: true, width: "94%container" },
+                    imageFont: null
+            },
+            tex2jax: {
+                preview: "none"
+            },
+            mml2jax: {
+                preview: 'none'
+            }
+    });
+</script>
+<script type="text/javascript">
+</script>
+<script angie="https://gh.bdstatic.com/static/gh/js/sdk/bword.min.js">
+</script>
+

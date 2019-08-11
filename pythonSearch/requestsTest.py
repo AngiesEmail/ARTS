@@ -89,7 +89,8 @@ print "========================================"
 if __name__=='__main__':
 	url = "http://www.baidu.com"
 	url1 = "www.baidu.com"
-	# print(getHTMLText(url1))
+	url2 = "https://blog.csdn.net/cordova/article/details/52491762"
+	print(getHTMLText(url2))
 
 
 		
