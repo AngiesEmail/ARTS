@@ -13,33 +13,27 @@ def merge(nums1, m, nums2, n):
         nums1 = nums2
     if nums2 == None:
         return None
-    dumpList(nums1)
-    dumpList(nums2)
     for x in xrange(0,n):
         nums1[m+x] = nums2[x]
-        
-    dumpList(nums1)
+
     # 以上循环等价于
     # nums1.extend(nums2)
     while True :
-        if nums1[len(nums1)-1] == 0:
+        if nums1[len(nums1)-1] == 0 and len(nums1) > m + n :
             nums1.pop()
         else:
             break
-    dumpList(nums1)
     wholeNum = len(nums1)
 
-    
-    for x in xrange(wholeNum-1,-1,-1):
-        if x == 0:
-            break
-        value1 = nums1[x]
-        value2 = nums1[x-1]
-        if value1 < value2:
-            nums1[x] = value2
-            nums1[x-1] = value1
-
-    dumpList(nums1)
+    for y in xrange(0,wholeNum):
+        for x in xrange(wholeNum-1,y,-1):
+            if x == 0:
+                break
+            value1 = nums1[x]
+            value2 = nums1[x-1]
+            if value1 < value2:
+                nums1[x] = value2
+                nums1[x-1] = value1
 
 def dumpList(data):
     value = "["
@@ -49,6 +43,6 @@ def dumpList(data):
     value = value + "]"
     print(value)
 
-data1 = [4,5,6,0,0,0]
-data2 = [1,2,3]
-merge(data1,3,data2,3)
+data1 = [4,5,6,0,0,0,0]
+data2 = [1,2,3,8]
+merge(data1,3,data2,4)
